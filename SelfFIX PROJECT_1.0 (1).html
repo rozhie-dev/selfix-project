@@ -1,0 +1,2584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SelfFIX PROJECT_1.0</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Roboto', 'Arial', 'sans-serif'],
+            mono: ['Roboto', 'Arial', 'sans-serif'],
+          },
+          colors: {
+            obsidian: '#0F172A',
+            cobalt: '#2563EB',
+            cobaltDark: '#1D4ED8',
+            workbench: '#F8FAFC',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #F8FAFC;
+      color: #0F172A;
+      font-family: 'Roboto', Arial, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Tactile Workbench Claymorphic / Soft Hardware Shadows */
+    .tactile-card {
+      background: #FFFFFF;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow:
+        0 10px 24px -6px rgba(15, 23, 42, 0.07),
+        0 3px 6px -2px rgba(15, 23, 42, 0.04),
+        inset 0 2px 0 rgba(255, 255, 255, 0.95);
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    @media (hover: hover) {
+      .tactile-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(37, 99, 235, 0.35);
+        box-shadow:
+          0 16px 32px -8px rgba(37, 99, 235, 0.14),
+          0 4px 10px -2px rgba(15, 23, 42, 0.06),
+          inset 0 2px 0 rgba(255, 255, 255, 1);
+      }
+    }
+
+    .tactile-card-active {
+      border: 2px solid #2563EB !important;
+      background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
+      box-shadow:
+        0 14px 28px -6px rgba(37, 99, 235, 0.22),
+        inset 0 2px 0 rgba(255, 255, 255, 1);
+    }
+
+    .tactile-btn {
+      box-shadow:
+        0 4px 10px rgba(15, 23, 42, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      transition: all 0.14s ease;
+    }
+    .tactile-btn:active {
+      transform: translateY(2px) scale(0.985);
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+    }
+
+    .tactile-pill-tray {
+      background: #F1F5F9;
+      border: 1px solid rgba(15, 23, 42, 0.07);
+      box-shadow: inset 0 2px 5px rgba(15, 23, 42, 0.06);
+    }
+
+    /* 3D Flashcard Flip */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .flip-inner {
+      position: relative;
+      display: grid;
+      width: 100%;
+      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+      transform-style: preserve-3d;
+    }
+    .flipped .flip-inner {
+      transform: rotateY(180deg);
+    }
+    /* both faces share one grid cell, so the card grows to fit its text */
+    .flip-front, .flip-back {
+      grid-area: 1 / 1;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .flip-back {
+      transform: rotateY(180deg);
+    }
+
+    /* Top tabs scroll sideways on small screens instead of wrapping */
+    .tab-tray {
+      overflow-x: auto;
+      scrollbar-width: none;
+      max-width: 100%;
+    }
+    .tab-tray::-webkit-scrollbar {
+      display: none;
+    }
+    .top-tab-btn {
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* use the real visible height on phones so the sidebar footer is not under the URL bar */
+    @supports (height: 100dvh) {
+      #leftSlidebar {
+        height: 100dvh;
+      }
+    }
+
+    /* desktop: the sidebar can be tucked away to give the workbench the full width */
+    @media (min-width: 1024px) {
+      body.sidebar-hidden #leftSlidebar {
+        display: none;
+      }
+    }
+
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(15, 23, 42, 0.16);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(37, 99, 235, 0.45);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col lg:flex-row bg-workbench text-obsidian antialiased selection:bg-cobalt selection:text-white">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ic-chip" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 3v3M12 3v3M15 3v3M9 18v3M12 18v3M15 18v3M3 9h3M3 12h3M3 15h3M18 9h3M18 12h3M18 15h3"/></symbol>
+  <symbol id="ic-card" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="1.5"/><circle cx="8" cy="12" r="2.5"/><circle cx="16" cy="12" r="2.5"/><path d="M6 17v3M18 17v3"/></symbol>
+  <symbol id="ic-board" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="4" height="4"/><path d="M14 7h4M14 11h4M7 15h10M7 18h6"/></symbol>
+  <symbol id="ic-ram" viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="8" rx="1"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8M5 16v3M19 16v3"/></symbol>
+  <symbol id="ic-plug" viewBox="0 0 24 24"><path d="M8 3v5M16 3v5M6 8h12v4a6 6 0 0 1-12 0z"/><path d="M12 18v3"/></symbol>
+  <symbol id="ic-tower" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M6 7h12M10 11h4M10 17h4"/></symbol>
+  <symbol id="ic-heatsink" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M7 5v14M11 5v14M15 5v14"/></symbol>
+  <symbol id="ic-fan" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M12 10C12 5 14 3 17 4c1 2 0 5-5 6M14 12c5 0 7 2 6 5-2 1-5 0-6-5M12 14c0 5-2 7-5 6-1-2 0-5 5-6M10 12C5 12 3 10 4 7c2-1 5 0 6 5"/></symbol>
+  <symbol id="ic-tube" viewBox="0 0 24 24"><rect x="5" y="3" width="10" height="5" rx="1"/><path d="M10 8v3M8 11h4l1 10H7z"/></symbol>
+  <symbol id="ic-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9 12h6M12 9v6"/></symbol>
+  <symbol id="ic-speaker" viewBox="0 0 24 24"><path d="M4 9h3l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></symbol>
+  <symbol id="ic-headphones" viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1"/><rect x="17" y="14" width="4" height="6" rx="1"/></symbol>
+  <symbol id="ic-wifi" viewBox="0 0 24 24"><path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/></symbol>
+  <symbol id="ic-camera" viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></symbol>
+  <symbol id="ic-drive" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 14h.01M11 14h6"/></symbol>
+  <symbol id="ic-ssd" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="1"/><path d="M7 9h4v6H7zM13 9h4v6h-4z"/></symbol>
+  <symbol id="ic-disc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></symbol>
+  <symbol id="ic-usb" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="13" rx="2"/><path d="M10 15v4h4v-4M9 6h6"/></symbol>
+  <symbol id="ic-sdcard" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M10 7v4M13 7v4"/></symbol>
+  <symbol id="ic-stack" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="6" rx="1"/><rect x="3" y="11" width="18" height="6" rx="1"/><path d="M7 6h.01M7 14h.01M11 6h6M11 14h6"/></symbol>
+  <symbol id="ic-tape" viewBox="0 0 24 24"><circle cx="8" cy="12" r="4"/><circle cx="16" cy="12" r="4"/></symbol>
+  <symbol id="ic-keyboard" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></symbol>
+  <symbol id="ic-mouse" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 3v7"/></symbol>
+  <symbol id="ic-tablet" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18h2"/></symbol>
+  <symbol id="ic-gamepad" viewBox="0 0 24 24"><path d="M7 8h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5 2l-1-1h-4l-1 1a3 3 0 0 1-5-2v-1a4 4 0 0 1 4-4z"/><path d="M8 11v3M6.5 12.5h3"/></symbol>
+  <symbol id="ic-scanner" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="8" rx="1"/><path d="M6 5h12M6 19h12M3 12h18"/></symbol>
+  <symbol id="ic-barcode" viewBox="0 0 24 24"><path d="M4 6v12M7 6v12M9 6v12M12 6v12M16 6v12M19 6v12"/></symbol>
+  <symbol id="ic-fingerprint" viewBox="0 0 24 24"><path d="M12 4a8 8 0 0 0-8 8c0 2 .5 4 1.5 5.5M12 8a4 4 0 0 0-4 4c0 2 .5 3.5 1 5M12 12c0 3 .5 6 2 8M16 12a4 4 0 0 0-1-2.5M19 12a7 7 0 0 0-1-3.5"/></symbol>
+  <symbol id="ic-piano" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="1"/><path d="M6 5v8M10 5v8M14 5v8M18 5v8"/></symbol>
+  <symbol id="ic-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8M12 16v5"/></symbol>
+  <symbol id="ic-printer" viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2"/><rect x="6" y="14" width="12" height="7"/></symbol>
+  <symbol id="ic-projector" viewBox="0 0 24 24"><rect x="3" y="7" width="14" height="10" rx="2"/><circle cx="17" cy="12" r="3"/></symbol>
+  <symbol id="ic-vr" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="4"/><path d="M8 12h8"/></symbol>
+  <symbol id="ic-router" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="7" rx="1.5"/><path d="M8 11L6 4M16 11l2-7M7 14.5h.01M11 14.5h.01"/></symbol>
+  <symbol id="ic-modem" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="9" rx="1.5"/><path d="M12 8V3M8 13h2M14 13h2"/></symbol>
+  <symbol id="ic-ports" viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="8" rx="1.5"/><path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01"/></symbol>
+  <symbol id="ic-panel" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="1.5"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 15h.01M10 15h.01M14 15h.01M18 15h.01"/></symbol>
+  <symbol id="ic-rj45" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/><path d="M9 6V3M15 6V3M9 14h6M9 17h6"/></symbol>
+  <symbol id="ic-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></symbol>
+  <symbol id="ic-fiber" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="12" r="2.5"/><path d="M7.5 12h9"/></symbol>
+  <symbol id="ic-cable" viewBox="0 0 24 24"><path d="M8 3v5a4 4 0 0 0 8 0V3"/><path d="M12 12v9"/></symbol>
+  <symbol id="ic-wrist" viewBox="0 0 24 24"><rect x="2" y="9" width="20" height="6" rx="3"/><path d="M12 9V6M9 6h6"/></symbol>
+  <symbol id="ic-mat" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 9h18M3 13h18M3 17h18"/></symbol>
+  <symbol id="ic-screwdriver" viewBox="0 0 24 24"><rect x="2" y="2" width="8" height="8" rx="4"/><path d="M9.5 9.5L21 21"/></symbol>
+  <symbol id="ic-hex" viewBox="0 0 24 24"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+  <symbol id="ic-pliers" viewBox="0 0 24 24"><path d="M8 2l4 9 4-9"/><path d="M12 11v11"/></symbol>
+  <symbol id="ic-cutter" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.5 7.5L20 16M8.5 16.5L20 8"/></symbol>
+  <symbol id="ic-tweezers" viewBox="0 0 24 24"><path d="M11 3L7 21M13 3l4 18"/></symbol>
+  <symbol id="ic-magnet" viewBox="0 0 24 24"><path d="M6 3v9a6 6 0 0 0 12 0V3"/><path d="M4 3h4M16 3h4"/></symbol>
+  <symbol id="ic-flashlight" viewBox="0 0 24 24"><path d="M7 3h10l-2 4H9z"/><rect x="8" y="7" width="8" height="14" rx="2"/></symbol>
+  <symbol id="ic-can" viewBox="0 0 24 24"><rect x="7" y="8" width="10" height="13" rx="2"/><path d="M9 8V5h6v3M12 5V2h3"/></symbol>
+  <symbol id="ic-cloth" viewBox="0 0 24 24"><path d="M4 6c3 2 3-2 6 0s3-2 6 0 3 2 4 0v12c-1 2-3 0-4 0s-3-2-6 0-3-2-6 0z"/></symbol>
+  <symbol id="ic-bottle" viewBox="0 0 24 24"><path d="M10 3h4v3l2 2v13H8V8l2-2z"/><path d="M10 12h4"/></symbol>
+  <symbol id="ic-tie" viewBox="0 0 24 24"><path d="M3 9h14v6H3z"/><path d="M17 12h4"/></symbol>
+  <symbol id="ic-organizer" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10M15 10v10"/></symbol>
+  <symbol id="ic-crimp" viewBox="0 0 24 24"><path d="M3 7h9l3 5-3 5H3z"/><path d="M15 12h6"/></symbol>
+  <symbol id="ic-punch" viewBox="0 0 24 24"><rect x="5" y="2" width="10" height="6" rx="1"/><path d="M10 8v12M7 20h6"/></symbol>
+  <symbol id="ic-tone" viewBox="0 0 24 24"><rect x="2" y="7" width="10" height="7" rx="1.5"/><path d="M15 7a5 5 0 0 1 0 7M18 4a9 9 0 0 1 0 13"/></symbol>
+  <symbol id="ic-multimeter" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><rect x="7" y="5" width="10" height="4"/><circle cx="12" cy="15" r="3"/></symbol>
+</svg>
+
+  <!-- MOBILE BACKDROP FOR SLIDEBAR -->
+  <div id="mobileOverlay" onclick="toggleSlidebar(false)" class="fixed inset-0 bg-obsidian/40 backdrop-blur-xs z-30 hidden lg:hidden"></div>
+
+  <!-- LEFT SLIDEBAR -->
+  <aside id="leftSlidebar" class="fixed lg:sticky top-0 left-0 z-40 h-screen w-72 bg-white border-r border-slate-200/90 flex flex-col justify-between p-5 overflow-y-auto overscroll-contain transition-transform duration-200 -translate-x-full lg:translate-x-0 shadow-xl lg:shadow-none">
+    <div>
+      <!-- Brand Header + No-Login Tune Icon -->
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-cobalt text-white flex items-center justify-center shadow-md shadow-cobalt/25">
+            <!-- Wrench logo -->
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-xl tracking-tight text-obsidian">Self<span class="text-cobalt">FIX</span></span>
+            </div>
+            <span class="inline-flex items-center gap-1 text-[10px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-cobalt border border-blue-200/80">
+              <span class="w-1.5 h-1.5 rounded-full bg-cobalt animate-pulse"></span>
+              LAB READY
+            </span>
+          </div>
+        </div>
+
+        <!-- Sliders / Tune Icon (No-Login Lab Utility Toggle) -->
+        <button onclick="openLabUtilityModal()" title="Lab Preferences & Public Session Log" class="tactile-btn p-2.5 rounded-xl bg-slate-100 hover:bg-blue-50 text-obsidian hover:text-cobalt border border-slate-200/80">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="relative mb-5">
+        <div class="flex items-center bg-slate-100/90 border border-slate-200/90 rounded-2xl px-3.5 py-2.5 focus-within:bg-white focus-within:border-cobalt focus-within:ring-2 focus-within:ring-cobalt/15 transition">
+          <svg class="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            id="globalSearchInput"
+            type="text"
+            oninput="handleGlobalSearch(this.value)"
+            placeholder="Search parts, tools, faults..."
+            class="w-full bg-transparent text-sm text-obsidian placeholder-slate-400 focus:outline-none"
+          />
+          <button id="clearSearchBtn" onclick="clearGlobalSearch()" class="hidden text-xs text-slate-400 hover:text-obsidian ml-1 font-semibold">✕</button>
+        </div>
+      </div>
+
+      <!-- Navigation Pills: Home & Pages -->
+      <nav class="space-y-2 mb-6">
+        <p class="px-2 text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">Workbench Navigation</p>
+        <button id="navHomeBtn" onclick="switchSideNav('home')" class="tactile-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-cobalt text-white font-semibold text-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.1" viewBox="0 0 24 24">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Home Workbench</span>
+        </button>
+
+        <button id="navPagesBtn" onclick="switchSideNav('pages')" class="tactile-btn w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-100/80 hover:bg-slate-200/70 text-obsidian font-semibold text-sm">
+          <span class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-cobalt" fill="none" stroke="currentColor" stroke-width="2.1" viewBox="0 0 24 24">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+            <span>Pages & Activity Log</span>
+          </span>
+          <span id="logCountBadge" class="text-[11px] font-mono bg-white text-cobalt border border-blue-200 px-2 py-0.5 rounded-full">0</span>
+        </button>
+      </nav>
+
+      <!-- Quick Category Shortcuts -->
+      <div class="space-y-1.5">
+        <p class="px-2 text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">Quick Jump (Hardware)</p>
+        <div id="sidebarCategoryQuickList" class="space-y-1"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Session Progress Card -->
+    <div class="p-4 rounded-2xl bg-obsidian text-white shadow-lg">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-mono uppercase tracking-wider text-blue-300">CSS Lab Readiness</span>
+        <span id="sidebarMasteredText" class="text-xs font-mono font-bold text-white">0 Checked</span>
+      </div>
+      <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden mb-2.5">
+        <div id="sidebarProgressBar" class="h-full bg-cobalt rounded-full transition-all duration-300" style="width: 12%"></div>
+      </div>
+      <p class="text-[11px] text-slate-300 leading-relaxed">No login required. Inspect hardware faults, verify CSS tools, and log diagnostics.</p>
+    </div>
+  </aside>
+
+  <!-- MAIN WORKSPACE AREA -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- TOP HEADER BAR -->
+    <header class="sticky top-0 z-20 bg-workbench/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 py-3.5">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+
+        <!-- Menu button: opens the drawer on phones, hides or shows the sidebar on desktop -->
+        <div class="flex items-center gap-2.5">
+          <button onclick="menuButtonClick()" aria-label="Show or hide menu" title="Show or hide menu" class="tactile-btn p-2.5 rounded-xl bg-white border border-slate-200 text-obsidian">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <span class="font-extrabold text-lg text-obsidian lg:hidden">Self<span class="text-cobalt">FIX</span></span>
+        </div>
+
+        <!-- 4 Tactile Top Mode Tabs -->
+        <div class="tactile-pill-tray tab-tray p-1.5 rounded-2xl flex items-center gap-1.5 w-full sm:w-auto justify-start sm:justify-center">
+          <button onclick="switchMainTab('hardware')" id="tab-hardware" class="top-tab-btn tactile-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-cobalt text-white">
+            Computer Hardware
+          </button>
+          <button onclick="switchMainTab('tools')" id="tab-tools" class="top-tab-btn tactile-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-obsidian hover:bg-white">
+            Tools
+          </button>
+          <button onclick="switchMainTab('flashcards')" id="tab-flashcards" class="top-tab-btn tactile-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-obsidian hover:bg-white">
+            Flashcards
+          </button>
+          <button onclick="switchMainTab('scenarios')" id="tab-scenarios" class="top-tab-btn tactile-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-obsidian hover:bg-white">
+            Lab Scenarios
+          </button>
+        </div>
+
+        <!-- Right Status Pill (Desktop) -->
+        <div class="hidden xl:flex items-center gap-2.5">
+          <span class="text-xs font-mono text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs">
+            TVL-ICT CSS Diagnostic Bench
+          </span>
+          <button onclick="openLabUtilityModal()" class="tactile-btn px-3 py-1.5 rounded-xl bg-white hover:bg-blue-50 text-cobalt border border-blue-200 text-xs font-semibold flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cobalt"></span>
+            Activity Log
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- LIVE SEARCH RESULTS BANNER (Visible when searching) -->
+    <div id="searchResultsSection" class="hidden max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <div class="tactile-card rounded-3xl p-5 sm:p-6 border-2 border-cobalt/30">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <span class="text-xs font-mono uppercase tracking-wider text-cobalt font-semibold">Live Workbench Search</span>
+            <h2 id="searchResultsTitle" class="text-lg font-bold text-obsidian">Matching Components & Tools</h2>
+          </div>
+          <button onclick="clearGlobalSearch()" class="tactile-btn px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-obsidian">
+            Clear Filter
+          </button>
+        </div>
+        <div id="searchResultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+      <!-- VIEW 1: COMPUTER HARDWARE -->
+      <section id="view-hardware" class="space-y-6">
+
+        <!-- Step 1: pick a category -->
+        <div id="hwStepCategories">
+          <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-4">
+            <div>
+              <span class="text-xs font-mono uppercase tracking-wider text-cobalt font-semibold">Step 1 · Select Hardware Subsystem</span>
+              <h1 class="text-2xl sm:text-3xl font-extrabold text-obsidian tracking-tight">Computer Hardware Explorer</h1>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-500">Click a category card below, then select any component to inspect its full troubleshooting breakdown.</p>
+          </div>
+
+          <div id="hardwareCategoryCards" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3.5">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Steps 2 and 3: components, then the diagnostic breakdown -->
+        <div id="hwBackBar" class="flex flex-wrap items-center gap-3 hidden">
+          <button onclick="hwGoBack()" class="tactile-btn px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs sm:text-sm font-bold text-obsidian hover:bg-slate-50">
+            ← Back
+          </button>
+          <p id="hwCrumb" class="text-xs sm:text-sm font-semibold text-slate-500"></p>
+        </div>
+
+        <div id="hwStepSplit" class="hidden">
+
+          <!-- Component Examples Grid -->
+          <div id="hwComponentsCol" class="tactile-card rounded-3xl p-5 sm:p-6">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-4 mb-4 border-b border-slate-100">
+              <div>
+                <span id="activeCategoryBadge" class="inline-block text-[11px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-cobalt font-semibold mb-1">
+                  Internal Components
+                </span>
+                <h2 id="activeCategoryHeading" class="text-lg sm:text-xl font-bold text-obsidian">
+                  Components & Modules (17)
+                </h2>
+              </div>
+              <span class="text-xs text-slate-400 font-medium">Tap any part to diagnose →</span>
+            </div>
+
+            <div id="componentGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Right-Hand Diagnostic Breakdown Panel -->
+          <div id="hwDetailCol" class="max-w-4xl w-full mx-auto">
+            <div id="diagnosticDetailPanel" class="tactile-card scroll-mt-40 rounded-3xl overflow-hidden border border-slate-200/90">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- VIEW 2: TOOLS          -->
+      <section id="view-tools" class="hidden space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div>
+            <span class="text-xs font-mono uppercase tracking-wider text-cobalt font-semibold">CSS Service Kit</span>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-obsidian tracking-tight">Computer Servicing & Diagnostic Tools</h1>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-500">Filter by tool group or click any tool to see when and how to use it safely.</p>
+        </div>
+
+        <!-- 5 Tool Category Filter Pills -->
+        <div id="toolCategoryFilterBar" class="flex flex-wrap gap-2">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Tools Grid -->
+        <div id="toolsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- VIEW 3: FLASHCARDS (Interactive Study Mode)               -->
+      <section id="view-flashcards" class="hidden space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <span class="text-xs font-mono uppercase tracking-wider text-cobalt font-semibold">Active Recall Drill</span>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-obsidian tracking-tight">Hardware & Tools Flashcards</h1>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="flashcardDeckSelect" onchange="resetFlashcards()" class="bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold text-obsidian shadow-2xs focus:outline-none focus:border-cobalt">
+              <option value="all">All Decks (Hardware + Tools)</option>
+              <option value="hardware">Computer Hardware Only</option>
+              <option value="tools">Servicing Tools Only</option>
+            </select>
+            <button onclick="shuffleFlashcards()" class="tactile-btn px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-obsidian">
+              ↻ Shuffle
+            </button>
+          </div>
+        </div>
+
+        <!-- Flashcard Stage -->
+        <div class="max-w-2xl mx-auto">
+          <div class="flex items-center justify-between text-xs font-mono text-slate-500 mb-2 px-1">
+            <span id="flashcardCounter">Card 1 of 20</span>
+            <span id="flashcardMasteredCount" class="text-cobalt font-semibold">Mastered: 0</span>
+          </div>
+
+          <div id="flashcardBox" onclick="flipFlashcard()" class="perspective-1000 min-h-72 sm:min-h-80 cursor-pointer select-none">
+            <div class="flip-inner">
+              <!-- Front -->
+              <div class="flip-front tactile-card rounded-3xl p-7 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                  <span id="fcFrontBadge" class="text-xs font-mono uppercase px-3 py-1 rounded-full bg-blue-50 text-cobalt font-semibold">Category</span>
+                  <span class="text-xs text-slate-400 font-medium">Tap card to flip ↻</span>
+                </div>
+                <div class="text-center my-auto px-2">
+                  <h2 id="fcFrontTitle" class="text-2xl sm:text-3xl font-extrabold text-obsidian mb-2">Processor (CPU)</h2>
+                  <p id="fcFrontHint" class="text-xs sm:text-sm text-slate-500">Identify its role, common failure symptoms, and required servicing tools.</p>
+                </div>
+                <div class="text-center">
+                  <span class="inline-block text-[11px] font-mono text-slate-400">SELF-FIX STUDY DECK</span>
+                </div>
+              </div>
+
+              <!-- Back -->
+              <div class="flip-back rounded-3xl p-7 bg-obsidian text-white shadow-xl flex flex-col justify-between border-2 border-cobalt">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-mono uppercase px-3 py-1 rounded-full bg-cobalt text-white font-semibold">Diagnostic Summary</span>
+                  <span class="text-xs text-blue-300 font-mono">Tap to flip back</span>
+                </div>
+                <div class="my-auto space-y-3">
+                  <p id="fcBackDesc" class="text-sm sm:text-base text-slate-100 leading-relaxed"></p>
+                  <div class="p-3 rounded-2xl bg-slate-900/90 border border-slate-700">
+                    <span class="block text-[11px] font-mono uppercase text-blue-300 mb-1">Key Fault / Usage Note</span>
+                    <p id="fcBackNote" class="text-xs sm:text-sm text-slate-300"></p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="text-[11px] font-mono text-blue-300">CSS Competency Ready ✓</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div class="grid grid-cols-3 sm:flex sm:flex-wrap items-center justify-between gap-2 sm:gap-3 mt-5">
+            <button onclick="prevFlashcard()" class="tactile-btn px-2 sm:px-5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs sm:text-sm font-bold text-obsidian hover:bg-slate-50">
+              ← Previous
+            </button>
+            <button onclick="markFlashcardMastered()" id="masterCardBtn" class="tactile-btn px-2 sm:px-5 py-2.5 rounded-2xl bg-cobalt text-white text-xs sm:text-sm font-bold hover:bg-cobaltDark">
+              ✓ Mark Mastered
+            </button>
+            <button onclick="nextFlashcard()" class="tactile-btn px-2 sm:px-5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs sm:text-sm font-bold text-obsidian hover:bg-slate-50">
+              Next →
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: LAB SCENARIOS (Hands-on Fault Simulation)         -->
+      <section id="view-scenarios" class="hidden space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div>
+            <span class="text-xs font-mono uppercase tracking-wider text-cobalt font-semibold">Hands-On Practical Bench</span>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-obsidian tracking-tight">Troubleshooting Lab Scenarios</h1>
+          </div>
+          <span id="scenarioScorePill" class="inline-flex items-center gap-2 text-xs font-mono font-bold px-3.5 py-2 rounded-xl bg-obsidian text-white">
+            Solved: 0 / 5 Cases
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          <!-- Scenario List -->
+          <div id="scenarioList" class="xl:col-span-4 space-y-3">
+            <!-- Populated by JS -->
+          </div>
+
+          <!-- Active Scenario Interactive Bench -->
+          <div id="activeScenarioBench" class="xl:col-span-8 tactile-card rounded-3xl p-6 sm:p-7">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 5: PAGES & OPTIONAL PUBLIC STUDENT ACTIVITY LOG      -->
+      <section id="view-pages" class="hidden space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div>
+            <span class="text-xs font-mono uppercase tracking-wider text-cobalt font-semibold">No-Login Session Directory</span>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-obsidian tracking-tight">Pages & Optional Student Activity Log</h1>
+          </div>
+          <button onclick="clearPublicLogs()" class="tactile-btn px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-600 hover:text-obsidian">
+            Clear Local Log
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          <!-- Quick Directory of All 5 Hardware Categories & 5 Tool Categories -->
+          <div class="xl:col-span-6 tactile-card rounded-3xl p-6 space-y-4">
+            <h2 class="text-lg font-bold text-obsidian">Workbench Quick Index</h2>
+            <p class="text-xs text-slate-500">Jump straight to any hardware subsystem or CSS tool kit covered in this simulator.</p>
+            <div id="pagesDirectoryList" class="space-y-2.5"></div>
+          </div>
+
+          <!-- Optional Public Activity Log Feed -->
+          <div class="xl:col-span-6 tactile-card rounded-3xl p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-lg font-bold text-obsidian">Optional Public Activity Log</h2>
+                <p class="text-xs text-slate-500">Log your completed checks without creating an account.</p>
+              </div>
+              <span class="text-[11px] font-mono px-2.5 py-1 rounded-full bg-blue-50 text-cobalt font-semibold">NO LOGIN</span>
+            </div>
+
+            <form onsubmit="submitPublicLog(event)" class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <input id="logStudentName" type="text" placeholder="Nickname / Student ID (Optional)" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-obsidian focus:outline-none focus:border-cobalt" />
+                <input id="logSectionInput" type="text" placeholder="Section (e.g., 12-ICT CSS)" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-obsidian focus:outline-none focus:border-cobalt" />
+              </div>
+              <div class="flex gap-2">
+                <input id="logNoteInput" type="text" required placeholder="What did you inspect or fix? (e.g., Checked CPU thermal paste & POST codes)" class="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-obsidian focus:outline-none focus:border-cobalt" />
+                <button type="submit" class="tactile-btn px-4 py-2 rounded-xl bg-cobalt text-white text-xs font-bold hover:bg-cobaltDark shrink-0">
+                  Post Log
+                </button>
+              </div>
+            </form>
+
+            <div id="publicActivityFeed" class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- NO-LOGIN LAB PREFERENCES & QUICK LOG MODAL (Triggered by Top-Left Tune Icon) -->
+  <div id="labUtilityModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-obsidian/45 backdrop-blur-xs">
+    <div class="tactile-card rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 bg-white relative">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-cobalt"></span>
+          <h3 class="font-bold text-base text-obsidian">Workbench Preferences & Quick Log</h3>
+        </div>
+        <button onclick="closeLabUtilityModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-obsidian hover:bg-slate-100">✕</button>
+      </div>
+
+      <div class="space-y-4">
+        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200/70">
+          <div>
+            <p class="text-xs font-bold text-obsidian">Tactile Click Feedback</p>
+            <p class="text-[11px] text-slate-500">Subtle audio click when inspecting parts</p>
+          </div>
+          <input id="soundToggleCheckbox" type="checkbox" checked class="w-4 h-4 accent-cobalt rounded cursor-pointer" />
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200/70">
+          <div>
+            <p class="text-xs font-bold text-obsidian">Reset Diagnostic Checklists</p>
+            <p class="text-[11px] text-slate-500">Clear all checked troubleshooting steps</p>
+          </div>
+          <button onclick="resetAllChecklists()" class="tactile-btn px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-obsidian hover:bg-red-50 hover:text-red-600">
+            Reset All
+          </button>
+        </div>
+
+        <div class="pt-1 flex justify-end gap-2">
+          <button onclick="closeLabUtilityModal(); switchSideNav('pages');" class="tactile-btn px-4 py-2 rounded-xl bg-cobalt text-white text-xs font-bold">
+            Open Full Activity Log →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastBanner" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:bottom-5 sm:right-5 z-50 hidden items-center gap-2.5 px-4 py-3 rounded-2xl bg-obsidian text-white text-xs font-semibold shadow-xl border border-slate-700">
+    <span class="w-2 h-2 rounded-full bg-cobalt"></span>
+    <span id="toastMessage">Logged to session feed</span>
+  </div>
+
+  <script>
+    // 1. COMPLETE HARDWARE & TOOLS KNOWLEDGE BASE
+
+    const HARDWARE_DATA = [
+      {
+        id: 'internal',
+        name: 'Internal Components',
+        shortDesc: 'Core motherboard, processing, power, and expansion hardware inside the system unit.',
+        iconSvg: `<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>`,
+        items: [
+          {
+            id: 'cpu',
+            icon: 'chip',
+            name: 'Processor (CPU)',
+            summary: 'Executes system instructions and arithmetic/logic operations; seated in the motherboard CPU socket.',
+            symptoms: ['PC powers on with fans spinning but no display (No POST)', 'Sudden thermal shutdowns under load', 'Motherboard CPU debug LED stays lit'],
+            problems: [
+              'Overheating due to dried thermal paste or improperly seated cooler',
+              'Bent or damaged socket/CPU pins causing memory or boot failure',
+              'Unseated CPU power cable (4+4 pin EPS 12V) on motherboard',
+              'Outdated BIOS firmware failing to recognize newer CPU generation',
+              'Unstable clock/voltage settings requiring CMOS reset'
+            ],
+            tools: ['Thermal paste', 'Isopropyl alcohol', 'Lint-free cloth', 'Screwdrivers (Phillips, flat-head, Torx)', 'POST diagnostic card']
+          },
+          {
+            id: 'gpu',
+            icon: 'card',
+            name: 'Graphics card (GPU)',
+            summary: 'Renders video output to monitors via PCIe x16 slot and handles 3D/display acceleration.',
+            symptoms: ['Black screen on boot while PC lights stay on', 'Screen artifacts, flickering lines, or driver crashes', 'GPU fans spin at 100% with no signal'],
+            problems: [
+              'Loose seating in the PCIe x16 slot or unlatched retention clip',
+              'Missing or loose 6-pin / 8-pin PCIe power connectors from PSU',
+              'Dust-clogged heatsink fins causing thermal throttling',
+              'Oxidized gold PCIe contacts needing gentle cleaning',
+              'Monitor cable plugged into motherboard instead of GPU ports'
+            ],
+            tools: ['Compressed air', 'Anti-static wrist strap', 'Screwdrivers (Phillips, flat-head, Torx)', 'Flashlight or headlamp']
+          },
+          {
+            id: 'motherboard',
+            icon: 'board',
+            name: 'Motherboard',
+            summary: 'Main printed circuit board connecting the CPU, RAM, storage, power, and expansion cards.',
+            symptoms: ['No power response when pressing front-panel power switch', 'POST beep codes or diagnostic LED faults', 'Dead USB ports or intermittent slot detection'],
+            problems: [
+              'Incorrectly wired front-panel headers (PWR_SW, RESET_SW)',
+              'Short circuit caused by misplaced motherboard brass standoffs',
+              'Swollen or leaking capacitors near the VRM section',
+              'Corrupted BIOS settings needing CMOS jumper/battery reset',
+              'Loose 24-pin ATX main power connector'
+            ],
+            tools: ['POST diagnostic card', 'Digital multimeter', 'Hex / nut driver', 'Anti-static mat', 'Flashlight or headlamp']
+          },
+          {
+            id: 'ram',
+            icon: 'ram',
+            name: 'Memory (RAM)',
+            summary: 'Volatile high-speed working memory modules (DDR4/DDR5) installed in motherboard DIMM slots.',
+            symptoms: ['Continuous beeping during startup (Memory Error beep code)', 'Blue Screen of Death (BSOD) with MEMORY_MANAGEMENT', 'System shows less installed RAM than physical sticks'],
+            problems: [
+              'RAM stick not fully clicked into both locking tabs of the DIMM slot',
+              'Dust or oxidation on gold contact fingers',
+              'Modules placed in wrong dual-channel slots (e.g., A1/B1 instead of A2/B2)',
+              'One faulty module in a multi-stick kit (isolate by testing one stick at a time)',
+              'Incompatible XMP/EXPO memory profile speed'
+            ],
+            tools: ['Anti-static wrist strap', 'Compressed air', 'Lint-free cloth', 'POST diagnostic card']
+          },
+          {
+            id: 'psu',
+            icon: 'plug',
+            name: 'Power supply unit (PSU)',
+            summary: 'Converts AC wall power into regulated +3.3V, +5V, and +12V DC rails for internal hardware.',
+            symptoms: ['Completely dead PC (no fans, no motherboard standby LED)', 'Random instant reboots during gaming or heavy tasks', 'Burning smell or clicking relay sound from PSU'],
+            problems: [
+              'Rear PSU rocker switch flipped OFF (O) or loose AC power cord',
+              'Degraded +12V or +5V voltage rail out of ATX tolerance',
+              'Loose modular cables on the PSU housing side',
+              'Dust-blocked PSU intake fan causing thermal protection trip',
+              'Insufficient wattage capacity for upgraded GPU/CPU'
+            ],
+            tools: ['Power supply tester', 'Digital multimeter', 'Compressed air', 'Screwdrivers (Phillips, flat-head, Torx)']
+          },
+          {
+            id: 'case',
+            icon: 'tower',
+            name: 'Computer case',
+            summary: 'Protective chassis housing all internal components, airflow pathways, and front I/O buttons.',
+            symptoms: ['Power button feels stuck or fails to trigger boot', 'High internal temperatures due to restricted airflow', 'Front USB or audio jack unresponsive'],
+            problems: [
+              'Disconnected F_PANEL or HD_AUDIO / USB 3.0 internal header cables',
+              'Extra brass standoff touching the back of the motherboard',
+              'Clogged front mesh dust filters restricting intake air',
+              'Missing PCIe slot covers allowing dust buildup'
+            ],
+            tools: ['Hex / nut driver', 'Screwdrivers (Phillips, flat-head, Torx)', 'Cable ties / Velcro straps', 'Compressed air']
+          },
+          {
+            id: 'cpu-cooler',
+            icon: 'heatsink',
+            name: 'CPU cooler (air or liquid)',
+            summary: 'Dissipates heat away from the CPU IHS using heatsinks/heatpipes or an AIO liquid radiator.',
+            symptoms: ['CPU idle temperatures above 65°C or immediate 100°C throttle', 'Loud grinding fan noise or bubbling AIO pump sound', 'CPU_FAN Error warning on boot screen'],
+            problems: [
+              'Protective plastic peel left on the cooler cold plate',
+              'Uneven mounting pressure or loose backplate screws',
+              'Pump tachometer or CPU_FAN header plugged into wrong board header',
+              'Failed AIO pump or air trapped in radiator loop'
+            ],
+            tools: ['Thermal paste', 'Isopropyl alcohol', 'Lint-free cloth', 'Screwdrivers (Phillips, flat-head, Torx)']
+          },
+          {
+            id: 'case-fans',
+            icon: 'fan',
+            name: 'Case fans and radiators',
+            summary: 'Maintains positive/balanced chassis airflow across VRMs, GPU, and storage drives.',
+            symptoms: ['System interior runs hot under sustained workloads', 'Rattling vibration or stalled fan blades', 'Fan spins at full speed uncontrollably'],
+            problems: [
+              'Fan orientation reversed (all exhaust or all intake causing hot pockets)',
+              'Dust buildup weighing down fan blades and bearings',
+              'Loose 3-pin/4-pin PWM connector on SYS_FAN header',
+              'Loose cable obstructing fan blade rotation'
+            ],
+            tools: ['Compressed air', 'Cable ties / Velcro straps', 'Screwdrivers (Phillips, flat-head, Torx)', 'Flashlight or headlamp']
+          },
+          {
+            id: 'thermal-paste',
+            icon: 'tube',
+            name: 'Thermal paste',
+            summary: 'Thermally conductive compound filling microscopic air gaps between CPU/GPU die and heatsink.',
+            symptoms: ['Rapid temperature spikes seconds after opening applications', 'High temperatures despite clean heatsink and spinning fans'],
+            problems: [
+              'Paste dried out and cracked after years of thermal cycles',
+              'Insufficient coverage leaving bare spots on the CPU heatspreader',
+              'Old residue not cleaned with isopropyl alcohol before reapplication'
+            ],
+            tools: ['Thermal paste', 'Isopropyl alcohol', 'Lint-free cloth']
+          },
+          {
+            id: 'chipset',
+            icon: 'chip',
+            name: 'Chipset',
+            summary: 'Motherboard controller hub (PCH) managing PCIe lanes, SATA ports, USB, and peripheral I/O.',
+            symptoms: ['Multiple USB ports or SATA drives dropping out simultaneously', 'High chipset sensor temperature in hardware monitor'],
+            problems: [
+              'Loose chipset heatsink or degraded thermal pad underneath',
+              'Missing or corrupted motherboard chipset drivers in OS',
+              'Overheating due to poor lower-case airflow'
+            ],
+            tools: ['Flashlight or headlamp', 'Compressed air', 'Thermal paste']
+          },
+          {
+            id: 'bios-chip',
+            icon: 'chip',
+            name: 'BIOS/UEFI chip',
+            summary: 'Non-volatile flash ROM storing low-level hardware initialization firmware and boot settings.',
+            symptoms: ['System hangs on motherboard logo splash screen', 'Boot loop immediately after a failed BIOS update', 'Hardware settings fail to save'],
+            problems: [
+              'Corrupted UEFI configuration variables needing CMOS clear',
+              'Incorrect boot mode (Legacy CSM vs. UEFI) preventing OS boot',
+              'Interrupted firmware flash requiring BIOS Flashback recovery'
+            ],
+            tools: ['Tweezers', 'POST diagnostic card', 'Flashlight or headlamp']
+          },
+          {
+            id: 'cmos-battery',
+            icon: 'coin',
+            name: 'CMOS battery',
+            summary: 'CR2032 3V coin cell powering the real-time clock (RTC) and BIOS settings when AC power is off.',
+            symptoms: ['System date and time reset to default on every cold boot', 'CMOS Checksum Bad / Press F1 to Run Setup message'],
+            problems: [
+              'Coin cell voltage dropped below ~2.7V (healthy cell reads ~3.0V–3.3V)',
+              'Oxidized battery holder contact spring',
+              'Battery installed upside down (polarity reversed)'
+            ],
+            tools: ['Digital multimeter', 'Tweezers', 'Anti-static wrist strap']
+          },
+          {
+            id: 'sound-card',
+            icon: 'speaker',
+            name: 'Sound card',
+            summary: 'Dedicated PCIe or onboard audio codec converting digital audio to analog speaker/mic signals.',
+            symptoms: ['No audio output or static crackling through speakers/headset', 'Microphone input not detected'],
+            problems: [
+              'Unseated PCIe sound card or loose front-panel HD_AUDIO header',
+              'Wrong default playback device selected in OS sound settings',
+              'Electrical interference from adjacent high-power GPU'
+            ],
+            tools: ['Screwdrivers (Phillips, flat-head, Torx)', 'Compressed air', 'Flashlight or headlamp']
+          },
+          {
+            id: 'nic-wifi',
+            icon: 'wifi',
+            name: 'Network interface card (NIC) and Wi-Fi card',
+            summary: 'Provides wired Gigabit/2.5G Ethernet or wireless Wi-Fi/Bluetooth connectivity.',
+            symptoms: ['Red X / No Internet despite working router', 'Weak Wi-Fi signal or frequent disconnects', 'Link LED on Ethernet port stays dark'],
+            problems: [
+              'Unscrewed external Wi-Fi antenna leads or detached M.2 U.FL antenna snaps',
+              'Loose PCIe x1 or M.2 E-key card seating',
+              'Damaged RJ45 port pins or disabled adapter in BIOS/OS'
+            ],
+            tools: ['Tweezers', 'Screwdrivers (Phillips, flat-head, Torx)', 'Cable tester', 'Loopback adapter']
+          },
+          {
+            id: 'capture-card',
+            icon: 'camera',
+            name: 'Capture card',
+            summary: 'Internal PCIe card that ingests HDMI/SDI video streams for recording or live streaming.',
+            symptoms: ['No signal in capture software', 'Dropped frames or audio/video desync'],
+            problems: [
+              'Installed in a bandwidth-limited PCIe x1 slot instead of x4/x16',
+              'HDCP copy protection enabled on source console/device',
+              'Loose HDMI input/passthrough cable'
+            ],
+            tools: ['Screwdrivers (Phillips, flat-head, Torx)', 'Flashlight or headlamp']
+          },
+          {
+            id: 'raid-controller',
+            icon: 'stack',
+            name: 'RAID controller',
+            summary: 'Hardware or firmware controller combining multiple drives for redundancy (RAID 1/5/10) or speed (RAID 0).',
+            symptoms: ['Degraded array warning during boot', 'Logical volume missing from OS disk management'],
+            problems: [
+              'Single member drive disconnected or failing',
+              'Loose SAS/SATA breakout cable on controller card',
+              'Depleted RAID cache backup battery'
+            ],
+            tools: ['Screwdrivers (Phillips, flat-head, Torx)', 'Flashlight or headlamp', 'Parts organizer']
+          },
+          {
+            id: 'internal-cables',
+            icon: 'cable',
+            name: 'Internal cables (SATA, power, data)',
+            summary: 'Harnesses carrying DC power and high-speed data between PSU, motherboard, drives, and case I/O.',
+            symptoms: ['Storage drive intermittently disappears', 'Front USB ports dead or power switch unresponsive', 'Messy cables blocking fan airflow'],
+            problems: [
+              'Partially unseated SATA data latch or SATA power plug',
+              'Sharp bend or pinched wire behind the motherboard tray',
+              'Swapped modular PSU cables from a different PSU brand (critical hazard)'
+            ],
+            tools: ['Cable ties / Velcro straps', 'Flashlight or headlamp', 'Needle-nose pliers', 'Digital multimeter']
+          }
+        ]
+      },
+      {
+        id: 'storage',
+        name: 'Storage',
+        shortDesc: 'Internal and external non-volatile drives, optical media, flash cards, and network storage.',
+        iconSvg: `<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><circle cx="7" cy="7" r="1"/><circle cx="7" cy="17" r="1"/></svg>`,
+        items: [
+          {
+            id: 'hdd',
+            icon: 'drive',
+            name: 'Hard disk drive (HDD)',
+            summary: 'Electromechanical magnetic platter drive used for high-capacity bulk data storage.',
+            symptoms: ['Clicking, grinding, or repetitive spinning sounds', 'Very slow file transfers or frozen File Explorer', 'Drive missing in BIOS'],
+            problems: [
+              'Loose SATA data cable or missing 15-pin SATA power connection',
+              'Bad sectors reported by SMART diagnostics',
+              'Mechanical read/write head failure (requires immediate data backup)'
+            ],
+            tools: ['External drive enclosure / dock', 'Screwdrivers (Phillips, flat-head, Torx)', 'Power supply tester']
+          },
+          {
+            id: 'ssd',
+            icon: 'ssd',
+            name: 'Solid-state drive (SATA SSD and NVMe M.2 SSD)',
+            summary: 'High-speed NAND flash storage connected via 2.5" SATA or direct M.2 PCIe/NVMe slots.',
+            symptoms: ['Boot device not found error', 'System freezes during write operations', 'NVMe drive not appearing in M.2 slot'],
+            problems: [
+              'M.2 SSD not inserted at 30° angle before tightening standoff screw',
+              'M.2 slot disabled because a shared SATA port is occupied (check motherboard manual)',
+              'Missing thermal pad causing NVMe controller throttling'
+            ],
+            tools: ['Screwdrivers (Phillips, flat-head, Torx)', 'Parts organizer', 'External drive enclosure / dock']
+          },
+          {
+            id: 'optical-drive',
+            icon: 'disc',
+            name: 'Optical drive (CD, DVD, Blu-ray)',
+            summary: 'Laser-based disc reader/writer connected via SATA or USB.',
+            symptoms: ['Disc tray refuses to eject', 'Disc spins up but shows empty or read error'],
+            problems: [
+              'Dust on laser lens or scratched optical media',
+              'Stuck tray belt (can be manually opened with pinhole release)',
+              'Loose SATA data/power cable'
+            ],
+            tools: ['Part retriever', 'Lint-free cloth', 'Compressed air']
+          },
+          {
+            id: 'usb-flash',
+            icon: 'usb',
+            name: 'USB flash drive',
+            summary: 'Portable NAND flash thumb drive used for bootable OS installers and file transfer.',
+            symptoms: ['USB Device Not Recognized popup', 'Drive asks to format before use (RAW partition)'],
+            problems: [
+              'Corrupted partition table from unsafe removal',
+              'Bent USB Type-A/Type-C plug or pocket lint inside connector',
+              'Worn flash controller write-protect lock'
+            ],
+            tools: ['Flashlight or headlamp', 'Compressed air']
+          },
+          {
+            id: 'memory-cards',
+            icon: 'sdcard',
+            name: 'Memory cards (SD, microSD, CompactFlash)',
+            summary: 'Removable flash media cards used in cameras, single-board computers, and mobile devices.',
+            symptoms: ['Card locked / Write-protected error', 'Card not detected in reader slot'],
+            problems: [
+              'Physical slide lock switch on side of SD card pushed down',
+              'Dirty gold contact pads or bent pins inside CompactFlash slot',
+              'Faulty USB card reader'
+            ],
+            tools: ['Lint-free cloth', 'Tweezers', 'Flashlight or headlamp']
+          },
+          {
+            id: 'external-drive',
+            icon: 'drive',
+            name: 'External hard drive or SSD',
+            summary: 'Portable enclosed drive connected over USB 3.x / Thunderbolt.',
+            symptoms: ['Drive light blinks but drive letter never mounts', 'Disconnects when cable is nudged'],
+            problems: [
+              'Faulty USB-to-SATA bridge board inside enclosure',
+              'Worn Micro-B or USB-C cable causing power drop',
+              'Unassigned drive letter in Disk Management'
+            ],
+            tools: ['External drive enclosure / dock', 'Screwdrivers (Phillips, flat-head, Torx)']
+          },
+          {
+            id: 'nas',
+            icon: 'stack',
+            name: 'Network-attached storage (NAS)',
+            summary: 'Dedicated multi-bay file server connected to the local network for shared storage and backups.',
+            symptoms: ['Shared network folders unreachable', 'Amber warning LED on one drive bay'],
+            problems: [
+              'Unplugged Ethernet patch cable or IP address conflict',
+              'Single bay drive failure requiring hot-swap rebuild',
+              'Clogged rear cooling fan causing drive overheating'
+            ],
+            tools: ['Cable tester', 'Compressed air', 'Screwdrivers (Phillips, flat-head, Torx)']
+          },
+          {
+            id: 'tape-drive',
+            icon: 'tape',
+            name: 'Tape drive',
+            summary: 'Sequential magnetic tape cartridge unit used for long-term archival enterprise backups.',
+            symptoms: ['Tape cartridge stuck or read/write verify failure', 'Cleaning cartridge alert LED'],
+            problems: [
+              'Dirty tape read/write heads needing a cleaning cycle',
+              'Loose SAS/Fibre Channel interface cable',
+              'Damaged leader pin inside tape cartridge'
+            ],
+            tools: ['Compressed air', 'Flashlight or headlamp']
+          }
+        ]
+      },
+      {
+        id: 'input',
+        name: 'Input Devices',
+        shortDesc: 'Peripherals that send user keystrokes, pointer movement, audio, scans, and control signals to the PC.',
+        iconSvg: `<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>`,
+        items: [
+          {
+            id: 'keyboard',
+            icon: 'keyboard',
+            name: 'Keyboard',
+            summary: 'Wired USB, wireless 2.4GHz, or Bluetooth alphanumeric input device.',
+            symptoms: ['Specific keys unresponsive or double-typing (chattering)', 'Keyboard completely dead during BIOS entry'],
+            problems: [
+              'Debris or liquid residue trapped beneath keycaps/switches',
+              'Plugged into a dead front-panel USB port instead of rear motherboard USB',
+              'Depleted battery or missing 2.4GHz USB receiver'
+            ],
+            tools: ['Compressed air', 'Isopropyl alcohol', 'Lint-free cloth', 'Tweezers']
+          },
+          {
+            id: 'mouse',
+            icon: 'mouse',
+            name: 'Mouse, trackpad, trackball',
+            summary: 'Optical/laser pointing devices and capacitive trackpads for cursor navigation.',
+            symptoms: ['Cursor jumps erratically or fails to track smoothly', 'Left/right click fails to register consistently'],
+            problems: [
+              'Hair or dust blocking the optical sensor lens underneath',
+              'Reflective or uneven desk surface affecting sensor tracking',
+              'Frayed USB cable or low wireless battery'
+            ],
+            tools: ['Lint-free cloth', 'Isopropyl alcohol', 'Compressed air']
+          },
+          {
+            id: 'touchscreen',
+            icon: 'tablet',
+            name: 'Touchscreen',
+            summary: 'Capacitive or resistive touch overlay integrated into monitors, laptops, or kiosks.',
+            symptoms: ['Phantom touches or inaccurate touch coordinates', 'Touch input stops responding while display still shows image'],
+            problems: [
+              'Grease/moisture buildup on screen glass',
+              'Disconnected USB upstream touch cable on external touch monitors',
+              'HID-compliant touch screen driver disabled'
+            ],
+            tools: ['Lint-free cloth', 'Flashlight or headlamp']
+          },
+          {
+            id: 'game-controller',
+            icon: 'gamepad',
+            name: 'Game controller and joystick',
+            summary: 'Analog thumbstick, trigger, and flight-stick input controllers.',
+            symptoms: ['Analog stick drift when centered', 'Controller disconnects intermittently over USB'],
+            problems: [
+              'Dust around potentiometer/Hall-effect stick gimbal',
+              'Loose Micro-USB / USB-C port connection',
+              'Calibration offset needing reset'
+            ],
+            tools: ['Compressed air', 'Isopropyl alcohol']
+          },
+          {
+            id: 'webcam-mic',
+            icon: 'camera',
+            name: 'Webcam and microphone',
+            summary: 'USB or integrated camera and audio capture transducers for conferencing and recording.',
+            symptoms: ['Black camera preview or privacy shutter closed', 'Microphone audio muffled or silent'],
+            problems: [
+              'Physical lens privacy cover slid shut',
+              'OS camera/microphone privacy permissions blocked',
+              'Wrong input device selected or loose 3.5mm/USB plug'
+            ],
+            tools: ['Lint-free cloth', 'Flashlight or headlamp']
+          },
+          {
+            id: 'scanner',
+            icon: 'scanner',
+            name: 'Scanner',
+            summary: 'Flatbed or sheet-fed optical document digitizer.',
+            symptoms: ['Vertical colored streak across every scanned page', 'Scanner carriage stays locked'],
+            problems: [
+              'Smudge or speck of dust on the glass calibration strip',
+              'Physical carriage lock switch still engaged underneath',
+              'Loose USB data cable or power adapter'
+            ],
+            tools: ['Lint-free cloth', 'Compressed air']
+          },
+          {
+            id: 'drawing-tablet',
+            icon: 'tablet',
+            name: 'Drawing tablet and stylus',
+            summary: 'Electromagnetic resonance (EMR) pen display or graphics tablet for pressure-sensitive input.',
+            symptoms: ['Pen cursor offsets from nib tip', 'No pressure sensitivity in drawing apps'],
+            problems: [
+              'Worn-down stylus nib needing replacement with nib puller',
+              'Conflicting tablet drivers installed',
+              'Loose USB/HDMI combo cable'
+            ],
+            tools: ['Tweezers', 'Lint-free cloth']
+          },
+          {
+            id: 'barcode-qr',
+            icon: 'barcode',
+            name: 'Barcode and QR code reader',
+            summary: 'Laser or 2D imager scanner operating in USB HID keyboard-wedge or serial mode.',
+            symptoms: ['Scanner beeps on scan but no text appears on screen', 'Fails to read 2D QR codes'],
+            problems: [
+              'Configured in Serial/COM mode instead of USB Keyboard Wedge mode',
+              'Dirty front scan window',
+              'Incorrect suffix (Enter/Tab) programming'
+            ],
+            tools: ['Lint-free cloth', 'Loopback adapter']
+          },
+          {
+            id: 'biometric-smartcard',
+            icon: 'fingerprint',
+            name: 'Fingerprint reader and smart card reader',
+            summary: 'Biometric capacitance/optical sensors and ISO 7816 chip card readers for authentication.',
+            symptoms: ['Fingerprint fails to recognize enrolled finger', 'Smart card not detected when inserted'],
+            problems: [
+              'Oils or dirt on sensor surface',
+              'Debris inside smart card slot contacts',
+              'Disabled biometric service in OS'
+            ],
+            tools: ['Lint-free cloth', 'Compressed air']
+          },
+          {
+            id: 'midi-keyboard',
+            icon: 'piano',
+            name: 'MIDI keyboard',
+            summary: 'Musical Instrument Digital Interface controller sending note/velocity data via USB or 5-pin DIN.',
+            symptoms: ['DAW software receives no MIDI note signals', 'Stuck sustain pedal polarity'],
+            problems: [
+              'MIDI IN/OUT 5-pin cables swapped (OUT must go to IN)',
+              'Sustain pedal plugged in after powering on keyboard (inverts polarity)',
+              'Damaged USB-B cable'
+            ],
+            tools: ['Loopback adapter', 'Cable ties / Velcro straps']
+          }
+        ]
+      },
+      {
+        id: 'output',
+        name: 'Output Devices',
+        shortDesc: 'Displays, printers, audio transducers, projectors, plotters, and XR headsets.',
+        iconSvg: `<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+        items: [
+          {
+            id: 'monitor',
+            icon: 'monitor',
+            name: 'Monitor',
+            summary: 'LCD/LED/OLED visual display connected via HDMI, DisplayPort, DVI, or VGA.',
+            symptoms: ['"No Signal" message on screen', 'Flickering image or washed-out colors', 'Stuck at 60Hz instead of high refresh rate'],
+            problems: [
+              'Monitor input source set to wrong port (e.g., HDMI 1 vs DisplayPort)',
+              'Loose or damaged DisplayPort/HDMI cable',
+              'External power brick unplugged or faulty'
+            ],
+            tools: ['Lint-free cloth', 'Digital multimeter', 'Flashlight or headlamp']
+          },
+          {
+            id: 'printer',
+            icon: 'printer',
+            name: 'Printer (inkjet, laser, thermal, dot-matrix, 3D)',
+            summary: 'Hard-copy document and 3D object output devices across multiple print technologies.',
+            symptoms: ['Paper jam error with no visible paper', 'Blank pages, faded streaks, or smeared toner', 'Printer offline in print queue'],
+            problems: [
+              'Torn paper scrap stuck near pickup rollers or fuser assembly',
+              'Clogged inkjet printhead nozzles or empty toner/filament',
+              'Thermal printhead residue buildup or misaligned 3D print bed'
+            ],
+            tools: ['Tweezers', 'Lint-free cloth', 'Isopropyl alcohol', 'Compressed air']
+          },
+          {
+            id: 'speakers-headphones',
+            icon: 'headphones',
+            name: 'Speakers and headphones',
+            summary: 'Analog 3.5mm, USB, or wireless electroacoustic audio output devices.',
+            symptoms: ['Audio only plays in left or right channel', 'Loud 60Hz hum or static buzz'],
+            problems: [
+              '3.5mm TRS/TRRS plug not pushed all the way into the green Line-Out jack',
+              'Plugged into Line-In (blue) or Mic (pink) jack by mistake',
+              'Frayed cable near plug strain relief'
+            ],
+            tools: ['Digital multimeter', 'Flashlight or headlamp']
+          },
+          {
+            id: 'projector',
+            icon: 'projector',
+            name: 'Projector',
+            summary: 'DLP/LCD optical projection unit for large-screen presentations.',
+            symptoms: ['Projector shuts down with flashing TEMP/LAMP LED', 'Dim or yellow-tinted image'],
+            problems: [
+              'Clogged side air filter causing lamp overheating',
+              'Projection lamp reached end of rated hours',
+              'Wrong aspect/resolution signal from laptop'
+            ],
+            tools: ['Compressed air', 'Lint-free cloth', 'Screwdrivers (Phillips, flat-head, Torx)']
+          },
+          {
+            id: 'plotter',
+            icon: 'printer',
+            name: 'Plotter',
+            summary: 'Wide-format vector/CAD printer for architectural blueprints, schematics, and banners.',
+            symptoms: ['Banding lines across wide prints', 'Roll media skewing during feed'],
+            problems: [
+              'Dirty encoder strip behind print carriage',
+              'Improperly loaded roll spindle flanges',
+              'Clogged printhead nozzles'
+            ],
+            tools: ['Lint-free cloth', 'Isopropyl alcohol', 'Compressed air']
+          },
+          {
+            id: 'vr-ar',
+            icon: 'vr',
+            name: 'VR and AR headsets',
+            summary: 'Head-mounted stereoscopic displays with inside-out or base-station spatial tracking.',
+            symptoms: ['Headset display stays black while tracking works', 'World drift or lost boundary tracking'],
+            problems: [
+              'Smudged tracking cameras on outer headset shell',
+              'Loose high-bandwidth DisplayPort/USB-C tether cable',
+              'Plugged into motherboard port instead of discrete GPU'
+            ],
+            tools: ['Lint-free cloth', 'Cable ties / Velcro straps']
+          }
+        ]
+      },
+      {
+        id: 'networking',
+        name: 'Networking',
+        shortDesc: 'Local area network (LAN), WAN, routing, switching, cabling, and structured patch hardware.',
+        iconSvg: `<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M12 8v4M12 12l-7 4M12 12l7 4"/></svg>`,
+        items: [
+          {
+            id: 'router',
+            icon: 'router',
+            name: 'Router',
+            summary: 'Layer 3 gateway directing traffic between local LAN devices and the ISP WAN.',
+            symptoms: ['Connected to Wi-Fi/LAN but "No Internet Access"', 'High latency or frequent NAT drops'],
+            problems: [
+              'WAN cable plugged into a LAN port instead of the WAN/Internet port',
+              'DHCP pool exhausted or double-NAT conflict with ISP modem',
+              'Overheating from blocked ventilation vents'
+            ],
+            tools: ['Cable tester', 'Compressed air', 'Loopback adapter']
+          },
+          {
+            id: 'modem',
+            icon: 'modem',
+            name: 'Modem',
+            summary: 'Modulates/demodulates ISP coaxial, DSL, or fiber signals into Ethernet data.',
+            symptoms: ['Upstream/Downstream or PON/LOS light blinking red/amber', 'No WAN IP assigned to router'],
+            problems: [
+              'Loose coaxial F-connector or bent fiber patch jumper',
+              'Faulty ISP splitter or line attenuation',
+              'Power adapter voltage drop'
+            ],
+            tools: ['Digital multimeter', 'Flashlight or headlamp']
+          },
+          {
+            id: 'network-switch',
+            icon: 'ports',
+            name: 'Network switch',
+            summary: 'Multi-port Layer 2/3 device forwarding Ethernet frames between wired LAN nodes.',
+            symptoms: ['One or more ports show no link/activity LED', 'Broadcast storm slowing entire LAN'],
+            problems: [
+              'Accidental loop created by plugging both ends of a patch cable into the switch',
+              'Faulty RJ45 keystone or straight-through cable',
+              'PoE budget exceeded on PoE switch ports'
+            ],
+            tools: ['Cable tester', 'Tone generator and probe', 'Loopback adapter']
+          },
+          {
+            id: 'wap',
+            icon: 'wifi',
+            name: 'Wireless access point',
+            summary: 'Dedicated ceiling/wall Wi-Fi transceiver providing wireless coverage wired back to a switch.',
+            symptoms: ['AP powered off despite Ethernet connection', 'Clients connect with weak throughput'],
+            problems: [
+              'Connected to a non-PoE switch port without a PoE injector',
+              'Faulty crimped RJ45 connector dropping link from 1Gbps to 100Mbps',
+              'Co-channel wireless interference'
+            ],
+            tools: ['Cable tester', 'Crimping tool', 'Tone generator and probe']
+          },
+          {
+            id: 'ethernet-cable',
+            icon: 'rj45',
+            name: 'Ethernet cable',
+            summary: 'Twisted-pair copper cabling (Cat5e, Cat6, Cat6a) terminated with T568A or T568B RJ45 plugs.',
+            symptoms: ['No network link or speed capped at 100 Mbps instead of 1000 Mbps', 'Intermittent packet loss when cable moves'],
+            problems: [
+              'Miswired T568A/T568B pinout order (e.g., split pairs)',
+              'One or more of the 8 copper conductors not fully pierced by RJ45 gold pins',
+              'Broken retention clip or excessive cable untwisting (>0.5 inch)'
+            ],
+            tools: ['Crimping tool', 'Cable tester', 'Wire cutter / stripper', 'Tone generator and probe']
+          },
+          {
+            id: 'hub-repeater',
+            icon: 'ports',
+            name: 'Hub and repeater',
+            summary: 'Legacy Layer 1 devices that broadcast or regenerate electrical signals across segments.',
+            symptoms: ['High collision rate LED blinking constantly', 'Severe throughput slowdown on shared segment'],
+            problems: [
+              'Half-duplex collision domain congestion (replace with a switch)',
+              'Exceeding 100-meter maximum copper segment length'
+            ],
+            tools: ['Cable tester', 'Tone generator and probe']
+          },
+          {
+            id: 'firewall',
+            icon: 'shield',
+            name: 'Firewall appliance',
+            summary: 'Dedicated network security hardware inspecting and filtering inbound/outbound traffic.',
+            symptoms: ['Legitimate VLAN or web traffic blocked', 'Management console unreachable'],
+            problems: [
+              'Misconfigured ACL/firewall rule blocking required ports',
+              'WAN/LAN interface cables swapped',
+              'Console serial port connection needed for recovery'
+            ],
+            tools: ['Loopback adapter', 'Cable tester']
+          },
+          {
+            id: 'fiber-transceiver',
+            icon: 'fiber',
+            name: 'Fiber optic transceiver',
+            summary: 'SFP/SFP+ hot-pluggable optical module converting electrical signals to laser light pulses.',
+            symptoms: ['SFP port link stays down despite intact fiber patch cord', 'High optical dBm loss'],
+            problems: [
+              'TX and RX strands not crossed over between endpoints',
+              'Dust contamination on LC/SC ceramic ferrule tip',
+              'Mismatched wavelength (e.g., Single-Mode 1310nm vs Multi-Mode 850nm)'
+            ],
+            tools: ['Lint-free cloth', 'Flashlight or headlamp']
+          },
+          {
+            id: 'patch-panel',
+            icon: 'panel',
+            name: 'Patch panel',
+            summary: 'Rack-mounted 110-block termination panel organizing horizontal structured wall cabling.',
+            symptoms: ['Wall data jack dead while switch port works with direct cable', 'Crosstalk or gigabit negotiation failure'],
+            problems: [
+              'Wire not seated deeply into the 110 IDC punch-down slot',
+              'Untwisted wire pairs left too long behind the panel',
+              'Unlabeled port bundle requiring cable tracing'
+            ],
+            tools: ['Punch-down tool', 'Tone generator and probe', 'Cable tester', 'Cable ties / Velcro straps']
+          }
+        ]
+      }
+    ];
+
+    const TOOLS_DATA = [
+      // 1. ESD Tools
+      {
+        id: 'esd-strap',
+        icon: 'wrist',
+        category: 'ESD (Electrostatic Discharge) Tools',
+        name: 'Anti-static wrist strap',
+        description: 'Grounds you to prevent static electricity from damaging components.',
+        usageTip: 'Clip the alligator clamp to an unpainted metal part of the PC chassis before touching RAM, CPU, or motherboards.'
+      },
+      {
+        id: 'esd-mat',
+        icon: 'mat',
+        category: 'ESD (Electrostatic Discharge) Tools',
+        name: 'Anti-static mat',
+        description: 'Provides a static-safe surface to work on and place parts.',
+        usageTip: 'Lay out the mat on your workbench and connect its grounding cord before placing removed motherboards or GPUs on it.'
+      },
+      // 2. Hand Tools
+      {
+        id: 'screwdrivers',
+        icon: 'screwdriver',
+        category: 'Hand Tools',
+        name: 'Screwdrivers (Phillips, flat-head, Torx)',
+        description: 'Drive and remove screws on cases, motherboards, and laptops.',
+        usageTip: 'Use a magnetized #2 Phillips for case/PSU screws and precision #0/#00 or Torx drivers for M.2 SSDs and laptops.'
+      },
+      {
+        id: 'hex-driver',
+        icon: 'hex',
+        category: 'Hand Tools',
+        name: 'Hex / nut driver',
+        description: 'Tightens or loosens hexagonal screws and standoffs.',
+        usageTip: 'Essential for installing and removing brass motherboard standoffs cleanly without stripping the hex head.'
+      },
+      {
+        id: 'needle-nose',
+        icon: 'pliers',
+        category: 'Hand Tools',
+        name: 'Needle-nose pliers',
+        description: 'Grip, bend, or reach small parts and wires in tight spaces.',
+        usageTip: 'Helpful for holding small nuts or guiding stiff cables around tight chassis corners.'
+      },
+      {
+        id: 'wire-cutter',
+        icon: 'cutter',
+        category: 'Hand Tools',
+        name: 'Wire cutter / stripper',
+        description: 'Cuts and strips cables cleanly.',
+        usageTip: 'Use when trimming cable ties flush or stripping outer jackets on network/low-voltage wires.'
+      },
+      {
+        id: 'tweezers',
+        icon: 'tweezers',
+        category: 'Hand Tools',
+        name: 'Tweezers',
+        description: 'Pick up or position tiny screws, jumpers, and components.',
+        usageTip: 'Ideal for setting motherboard CMOS clear jumpers, seating tiny U.FL Wi-Fi antenna snaps, or lifting CMOS batteries.'
+      },
+      {
+        id: 'part-retriever',
+        icon: 'magnet',
+        category: 'Hand Tools',
+        name: 'Part retriever',
+        description: 'Retrieves dropped screws or small parts from hard-to-reach spots.',
+        usageTip: 'Always retrieve any screw dropped beneath a motherboard before powering the system back on to prevent shorts.'
+      },
+      {
+        id: 'flashlight',
+        icon: 'flashlight',
+        category: 'Hand Tools',
+        name: 'Flashlight or headlamp',
+        description: 'Illuminates dark interiors inside a PC case.',
+        usageTip: 'Use to read tiny silk-screened F_PANEL pin labels and inspect CPU socket pins or capacitor tops.'
+      },
+      // 3. Cleaning & Organization Tools
+      {
+        id: 'compressed-air',
+        icon: 'can',
+        category: 'Cleaning & Organization Tools',
+        name: 'Compressed air',
+        description: 'Blows dust out of fans, heatsinks, and vents.',
+        usageTip: 'Hold fan blades still with a finger while spraying short upright bursts so fans do not overspin.'
+      },
+      {
+        id: 'lint-free-cloth',
+        icon: 'cloth',
+        category: 'Cleaning & Organization Tools',
+        name: 'Lint-free cloth',
+        description: 'Wipes surfaces and screens without leaving fibers or scratches.',
+        usageTip: 'Pair with isopropyl alcohol when wiping old thermal paste off a CPU heatspreader or cleaning monitor panels.'
+      },
+      {
+        id: 'isopropyl-alcohol',
+        icon: 'bottle',
+        category: 'Cleaning & Organization Tools',
+        name: 'Isopropyl alcohol',
+        description: 'Cleans thermal paste and stubborn residue from components.',
+        usageTip: 'Use 90%+ isopropyl alcohol so it evaporates rapidly without leaving moisture behind.'
+      },
+      {
+        id: 'cable-ties',
+        icon: 'tie',
+        category: 'Cleaning & Organization Tools',
+        name: 'Cable ties / Velcro straps',
+        description: 'Bundles internal or external cables for airflow and tidy routing.',
+        usageTip: 'Velcro straps make future upgrades and troubleshooting much easier than over-tightened plastic zip ties.'
+      },
+      {
+        id: 'parts-organizer',
+        icon: 'organizer',
+        category: 'Cleaning & Organization Tools',
+        name: 'Parts organizer',
+        description: 'Sorts and holds screws and small components during disassembly.',
+        usageTip: 'Separate M.2 screws, motherboard 6-32 screws, and SSD M3 screws into labeled compartments.'
+      },
+      // 4. Cable & Networking Tools
+      {
+        id: 'crimping-tool',
+        icon: 'crimp',
+        category: 'Cable & Networking Tools',
+        name: 'Crimping tool',
+        description: 'Attaches connectors (like RJ45) onto network cables.',
+        usageTip: 'Verify all 8 T568B wires reach the end of the RJ45 plug before squeezing the crimper firmly.'
+      },
+      {
+        id: 'punch-down-tool',
+        icon: 'punch',
+        category: 'Cable & Networking Tools',
+        name: 'Punch-down tool',
+        description: 'Inserts wires into patch panels or keystone jacks.',
+        usageTip: 'Keep the cutting blade side oriented toward the outside of the keystone jack to trim excess wire automatically.'
+      },
+      {
+        id: 'cable-tester',
+        icon: 'rj45',
+        category: 'Cable & Networking Tools',
+        name: 'Cable tester',
+        description: 'Checks continuity and wiring faults in network or patch cables.',
+        usageTip: 'Confirm pins 1 through 8 light up sequentially on both main and remote units to rule out open or crossed pairs.'
+      },
+      {
+        id: 'tone-generator',
+        icon: 'tone',
+        category: 'Cable & Networking Tools',
+        name: 'Tone generator and probe',
+        description: 'Traces and identifies specific cables inside walls or bundles.',
+        usageTip: 'Clip the tone generator to an unlabeled wall drop and sweep the inductive probe across the patch panel to find the matching port.'
+      },
+      // 5. Diagnostic & Testing Tools
+      {
+        id: 'multimeter',
+        icon: 'multimeter',
+        category: 'Diagnostic & Testing Tools',
+        name: 'Digital multimeter',
+        description: 'Measures voltage, resistance, and continuity in circuits and power lines.',
+        usageTip: 'Set to DC Volts (20V range) to verify a CR2032 CMOS battery (~3.0V) or PSU DC voltage rails.'
+      },
+      {
+        id: 'psu-tester',
+        icon: 'plug',
+        category: 'Diagnostic & Testing Tools',
+        name: 'Power supply tester',
+        description: 'Checks whether a PSU outputs proper voltages.',
+        usageTip: 'Plug the 24-pin ATX and 8-pin EPS connectors into the tester to verify +12V, +5V, +3.3V, and PG (Power Good) timing.'
+      },
+      {
+        id: 'loopback-adapter',
+        icon: 'rj45',
+        category: 'Diagnostic & Testing Tools',
+        name: 'Loopback adapter',
+        description: 'Tests serial, parallel, or network ports by routing signals back to the source.',
+        usageTip: 'Insert an RJ45 loopback plug into a NIC port to verify physical transceiver TX/RX hardware independently of the network.'
+      },
+      {
+        id: 'post-card',
+        icon: 'board',
+        category: 'Diagnostic & Testing Tools',
+        name: 'POST diagnostic card',
+        description: 'Reads startup error codes from the motherboard.',
+        usageTip: 'Check the 2-digit hexadecimal display against the motherboard BIOS code table when a PC fails to output video.'
+      },
+      {
+        id: 'drive-dock',
+        icon: 'drive',
+        category: 'Diagnostic & Testing Tools',
+        name: 'External drive enclosure / dock',
+        description: 'Connects internal drives via USB to test, clone, or recover data.',
+        usageTip: 'Quickly determine whether a non-booting drive has failed or if the internal SATA/M.2 slot is at fault.'
+      }
+    ];
+
+    const LAB_SCENARIOS = [
+      {
+        id: 'scen-1',
+        title: 'Case 01: Fans Spin, Black Screen (No POST)',
+        difficulty: 'Beginner',
+        symptom: 'A student reassembled a desktop PC after cleaning. When pressing power, all case fans spin and RGB lights turn on, but the monitor shows "No Signal" and the motherboard emits 1 long beep and 2 short beeps.',
+        questionTool: 'Which diagnostic tool should you check first to read motherboard startup fault codes?',
+        toolOptions: ['Crimping tool', 'POST diagnostic card', 'Punch-down tool'],
+        correctTool: 1,
+        questionFix: 'Which internal component is the most likely culprit to reseat in its slot?',
+        fixOptions: ['Memory (RAM) or Graphics card (GPU)', 'Optical drive (CD, DVD, Blu-ray)', 'CMOS battery'],
+        correctFix: 0,
+        explanation: 'Beeping with spinning fans and no video indicates a POST failure in Memory (RAM) or GPU initialization. Reseating RAM in slots A2/B2 and checking GPU PCIe seating/power resolves most post-cleaning no-boot cases.'
+      },
+      {
+        id: 'scen-2',
+        title: 'Case 02: CPU Hits 100°C & Shuts Down',
+        difficulty: 'Beginner',
+        symptom: 'A workstation boots to Windows normally, but within 2 minutes of opening a heavy application, CPU temperatures spike to 100°C and the system abruptly powers off.',
+        questionTool: 'Which cleaning supply should you use to remove dried compound from the CPU heatspreader?',
+        toolOptions: ['Isopropyl alcohol & Lint-free cloth', 'Tone generator and probe', 'Loopback adapter'],
+        correctTool: 0,
+        questionFix: 'What is the proper repair sequence for this thermal fault?',
+        fixOptions: [
+          'Clean old residue, apply fresh Thermal paste, and re-mount the CPU cooler evenly',
+          'Replace the Ethernet cable with Cat6',
+          'Format the NVMe M.2 SSD'
+        ],
+        correctFix: 0,
+        explanation: 'Dried thermal paste or an unseated CPU cooler prevents heat transfer from the CPU die to the heatsink, causing rapid thermal trip shutdowns.'
+      },
+      {
+        id: 'scen-3',
+        title: 'Case 03: Dead PC — Zero Fan Spin or Standby LED',
+        difficulty: 'Intermediate',
+        symptom: 'Pressing the front power button produces zero reaction—no fan twitch, no motherboard LED, and no PSU fan spin. The wall outlet is verified working.',
+        questionTool: 'Which tool directly verifies +12V, +5V, +3.3V, and Power Good (PG) rails?',
+        toolOptions: ['Power supply tester', 'Part retriever', 'Needle-nose pliers'],
+        correctTool: 0,
+        questionFix: 'After confirming the rear PSU switch is ON, what should you test next?',
+        fixOptions: [
+          'Disconnect 24-pin ATX from motherboard and test the Power supply unit (PSU) with a PSU tester',
+          'Clean the monitor screen with a lint-free cloth',
+          'Re-crimp the RJ45 network patch cord'
+        ],
+        correctFix: 0,
+        explanation: 'Testing the PSU independently with a Power supply tester isolates whether the PSU has failed or if the motherboard/front-panel power switch is at fault.'
+      },
+      {
+        id: 'scen-4',
+        title: 'Case 04: Newly Crimped Patch Cable Capped at 100 Mbps',
+        difficulty: 'Intermediate',
+        symptom: 'A student terminated a Cat6 Ethernet cable with RJ45 plugs. The PC connects to the switch, but link speed negotiates at 100 Mbps instead of 1000 Mbps (Gigabit).',
+        questionTool: 'Which tool checks pin-by-pin continuity (pins 1–8) across both ends of the cable?',
+        toolOptions: ['Cable tester', 'Thermal paste', 'Hex / nut driver'],
+        correctTool: 0,
+        questionFix: 'Gigabit Ethernet requires all 4 wire pairs (8 pins). What repair is needed?',
+        fixOptions: [
+          'Cut off the faulty plug and re-terminate using T568B standard with a Crimping tool',
+          'Replace the CMOS battery',
+          'Reseat the GPU'
+        ],
+        correctFix: 0,
+        explanation: '100BASE-TX only uses pins 1, 2, 3, and 6, while 1000BASE-T requires all 8 pins. A single unpierced wire on pins 4, 5, 7, or 8 drops link speed to 100 Mbps.'
+      },
+      {
+        id: 'scen-5',
+        title: 'Case 05: System Clock Resets & "CMOS Checksum Bad"',
+        difficulty: 'Beginner',
+        symptom: 'Every morning when the lab PC is switched on at the power strip, it pauses at boot with "CMOS Date/Time Not Set — Press F1 to Run Setup".',
+        questionTool: 'Which tool measures whether the 3V coin cell still holds ~3.0V DC?',
+        toolOptions: ['Digital multimeter', 'Punch-down tool', 'Compressed air'],
+        correctTool: 0,
+        questionFix: 'Which internal component needs replacement?',
+        fixOptions: ['CMOS battery (CR2032)', 'RAID controller', 'Capture card'],
+        correctFix: 0,
+        explanation: 'When the CR2032 CMOS battery drops below ~2.7V, the motherboard loses RTC time and BIOS configuration whenever AC power is disconnected.'
+      }
+    ];
+
+    // 2. APPLICATION STATE
+    let state = {
+      activeSideNav: 'home', // 'home' | 'pages'
+      activeMainTab: 'hardware', // 'hardware' | 'tools' | 'flashcards' | 'scenarios'
+      hwStep: 'categories', // 'categories' | 'components' | 'detail'
+      selectedCategoryId: 'internal',
+      selectedComponentId: 'cpu',
+      selectedToolCategory: 'All Tools',
+      checkedSteps: JSON.parse(localStorage.getItem('selffix_checked_steps') || '{}'),
+      publicLogs: JSON.parse(localStorage.getItem('selffix_public_logs') || 'null') || [
+        {
+          id: 1,
+          name: 'Bench Station 01',
+          section: '12-ICT CSS',
+          note: 'Verified Processor (CPU) thermal paste & POST diagnostic codes.',
+          time: 'Today · Lab Session'
+        },
+        {
+          id: 2,
+          name: 'Bench Station 04',
+          section: '12-ICT CSS',
+          note: 'Tested Cat6 T568B cable continuity with Cable tester (8/8 PASS).',
+          time: 'Today · Lab Session'
+        }
+      ],
+      flashcards: [],
+      fcIndex: 0,
+      fcMastered: JSON.parse(localStorage.getItem('selffix_fc_mastered') || '{}'),
+      activeScenarioId: 'scen-1',
+      scenarioAnswers: JSON.parse(localStorage.getItem('selffix_scenario_answers') || '{}')
+    };
+
+    // 3. TACTILE AUDIO FEEDBACK (Web Audio API - Zero External URLs)
+    let audioCtx = null;
+
+    function playTactileClick(freq = 520) {
+      const toggle = document.getElementById('soundToggleCheckbox');
+      if (toggle && !toggle.checked) return;
+      try {
+        // one shared context, because a new one per click piles up on phones
+        if (!audioCtx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          audioCtx = new AudioCtx();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.exponentialRampToValueAtTime(140, now + 0.045);
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } catch (e) {
+        // sound is optional, so just skip it
+      }
+    }
+
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      const text = document.getElementById('toastMessage');
+      text.textContent = msg;
+      banner.classList.remove('hidden');
+      banner.classList.add('flex');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        banner.classList.add('hidden');
+        banner.classList.remove('flex');
+      }, 2600);
+    }
+
+    // 4. NAVIGATION & SIDEBAR CONTROLS
+    function toggleSlidebar(open) {
+      const sb = document.getElementById('leftSlidebar');
+      const ov = document.getElementById('mobileOverlay');
+      if (open) {
+        sb.classList.remove('-translate-x-full');
+        ov.classList.remove('hidden');
+      } else {
+        sb.classList.add('-translate-x-full');
+        ov.classList.add('hidden');
+      }
+    }
+
+    // Phones open the drawer. Desktop hides or shows the sidebar and remembers the choice.
+    function menuButtonClick() {
+      playTactileClick(520);
+      if (window.matchMedia('(min-width: 1024px)').matches) {
+        const hidden = document.body.classList.toggle('sidebar-hidden');
+        try {
+          localStorage.setItem('selffix-sidebar', hidden ? 'hidden' : 'shown');
+        } catch (e) {
+          // storage can be blocked, so the choice just won't stick
+        }
+      } else {
+        toggleSlidebar(true);
+      }
+    }
+
+    function switchSideNav(target) {
+      playTactileClick(560);
+      state.activeSideNav = target;
+      const homeBtn = document.getElementById('navHomeBtn');
+      const pagesBtn = document.getElementById('navPagesBtn');
+
+      if (target === 'home') {
+        state.hwStep = 'categories';
+        homeBtn.className = 'tactile-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-cobalt text-white font-semibold text-sm';
+        pagesBtn.className = 'tactile-btn w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-100/80 hover:bg-slate-200/70 text-obsidian font-semibold text-sm';
+        switchMainTab(state.activeMainTab, false);
+      } else {
+        pagesBtn.className = 'tactile-btn w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-cobalt text-white font-semibold text-sm';
+        homeBtn.className = 'tactile-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-100/80 hover:bg-slate-200/70 text-obsidian font-semibold text-sm';
+        hideAllViews();
+        document.getElementById('view-pages').classList.remove('hidden');
+        renderPagesDirectory();
+        renderPublicLogs();
+      }
+      toggleSlidebar(false);
+    }
+
+    function hideAllViews() {
+      ['view-hardware', 'view-tools', 'view-flashcards', 'view-scenarios', 'view-pages'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+    }
+
+    function switchMainTab(tab, playAudio = true) {
+      if (playAudio) playTactileClick(540);
+      state.activeMainTab = tab;
+      state.activeSideNav = 'home';
+
+      // Reset side nav buttons to Home active
+      document.getElementById('navHomeBtn').className = 'tactile-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-cobalt text-white font-semibold text-sm';
+      document.getElementById('navPagesBtn').className = 'tactile-btn w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-100/80 hover:bg-slate-200/70 text-obsidian font-semibold text-sm';
+
+      // Update Top Tabs
+      document.querySelectorAll('.top-tab-btn').forEach(btn => {
+        btn.className = 'top-tab-btn tactile-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-obsidian hover:bg-white';
+      });
+      const activeBtn = document.getElementById(`tab-${tab}`);
+      if (activeBtn) {
+        activeBtn.className = 'top-tab-btn tactile-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-cobalt text-white';
+      }
+
+      hideAllViews();
+      document.getElementById(`view-${tab}`).classList.remove('hidden');
+
+      if (tab === 'hardware') renderHardwareView();
+      if (tab === 'tools') renderToolsView();
+      if (tab === 'flashcards') renderFlashcard();
+      if (tab === 'scenarios') renderScenariosView();
+    }
+
+    // 5. HARDWARE VIEW RENDERING (Sketches #2, #3, #4)
+    function renderSidebarQuickList() {
+      const container = document.getElementById('sidebarCategoryQuickList');
+      container.innerHTML = HARDWARE_DATA.map(cat => {
+        const isActive = state.selectedCategoryId === cat.id && state.activeMainTab === 'hardware' && state.activeSideNav === 'home';
+        return `
+          <button onclick="selectHardwareCategory('${cat.id}')" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition ${
+            isActive ? 'bg-blue-50 text-cobalt' : 'text-slate-600 hover:bg-slate-100 hover:text-obsidian'
+          }">
+            <span class="truncate">${cat.name}</span>
+            <span class="font-mono text-[10px] px-1.5 py-0.5 rounded-md ${isActive ? 'bg-cobalt text-white' : 'bg-slate-100 text-slate-500'}">${cat.items.length}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectHardwareCategory(catId) {
+      playTactileClick(500);
+      state.selectedCategoryId = catId;
+      const cat = HARDWARE_DATA.find(c => c.id === catId) || HARDWARE_DATA[0];
+      state.selectedComponentId = cat.items[0].id;
+      state.hwStep = 'components';
+      if (state.activeMainTab !== 'hardware' || state.activeSideNav !== 'home') {
+        switchMainTab('hardware', false);
+      } else {
+        renderHardwareView();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      toggleSlidebar(false);
+    }
+
+    function selectComponent(compId) {
+      playTactileClick(620);
+      state.selectedComponentId = compId;
+      state.hwStep = 'detail';
+      renderHardwareView();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function hwGoBack() {
+      playTactileClick(480);
+      state.hwStep = state.hwStep === 'detail' ? 'components' : 'categories';
+      renderHardwareView();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderHardwareView() {
+      renderSidebarQuickList();
+
+      // 1. Render 5 Category Cards (Sketch #3)
+      const catCardsEl = document.getElementById('hardwareCategoryCards');
+      catCardsEl.innerHTML = HARDWARE_DATA.map(cat => {
+        const active = cat.id === state.selectedCategoryId;
+        return `
+          <button onclick="selectHardwareCategory('${cat.id}')" class="tactile-card ${active ? 'tactile-card-active' : ''} rounded-3xl p-4 text-left flex flex-col justify-between group cursor-pointer">
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center transition ${
+                active ? 'bg-cobalt text-white shadow-md shadow-cobalt/25' : 'bg-slate-100 text-obsidian group-hover:bg-blue-50 group-hover:text-cobalt'
+              }">
+                ${cat.iconSvg}
+              </div>
+              <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                active ? 'bg-cobalt text-white' : 'bg-slate-100 text-slate-500'
+              }">
+                ${cat.items.length}
+              </span>
+            </div>
+            <div>
+              <h3 class="font-bold text-sm text-obsidian leading-snug group-hover:text-cobalt transition">${cat.name}</h3>
+              <p class="text-[11px] text-slate-500 line-clamp-2 mt-1">${cat.shortDesc}</p>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      // 2. Render Component Examples Grid (Sketch #4)
+      const activeCat = HARDWARE_DATA.find(c => c.id === state.selectedCategoryId) || HARDWARE_DATA[0];
+      document.getElementById('activeCategoryBadge').textContent = activeCat.name;
+      document.getElementById('activeCategoryHeading').textContent = `Components & Modules (${activeCat.items.length})`;
+
+      const compGridEl = document.getElementById('componentGrid');
+      compGridEl.innerHTML = activeCat.items.map((item, idx) => {
+        const isSelected = item.id === state.selectedComponentId;
+        const completedCount = item.problems.filter((_, pIdx) => state.checkedSteps[`${item.id}-${pIdx}`]).length;
+        return `
+          <button onclick="selectComponent('${item.id}')" class="tactile-card ${isSelected ? 'tactile-card-active' : ''} rounded-2xl p-3.5 text-left flex items-center justify-between gap-3 cursor-pointer">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center ${
+                isSelected ? 'bg-cobalt text-white' : 'bg-slate-100 text-slate-600'
+              }">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-${item.icon || 'chip'}"/></svg>
+              </span>
+              <div class="min-w-0">
+                <p class="font-bold text-sm text-obsidian truncate">${item.name}</p>
+                <p class="text-[11px] text-slate-500 truncate">${item.problems.length} troubleshootable faults</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              ${completedCount > 0 ? `<span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-50 text-cobalt border border-blue-200">${completedCount}/${item.problems.length}</span>` : ''}
+              <span class="text-xs font-bold ${isSelected ? 'text-cobalt' : 'text-slate-300'}">→</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      // 3. Render Right Diagnostic Breakdown Panel (Sketch #2)
+      const activeComp = activeCat.items.find(i => i.id === state.selectedComponentId) || activeCat.items[0];
+      renderDiagnosticDetailPanel(activeCat, activeComp);
+
+      // only one step is visible at a time
+      const step = state.hwStep;
+      document.getElementById('hwStepCategories').classList.toggle('hidden', step !== 'categories');
+      document.getElementById('hwStepSplit').classList.toggle('hidden', step === 'categories');
+      document.getElementById('hwBackBar').classList.toggle('hidden', step === 'categories');
+      document.getElementById('hwComponentsCol').classList.toggle('hidden', step === 'detail');
+      document.getElementById('hwDetailCol').classList.toggle('hidden', step !== 'detail');
+      document.getElementById('hwCrumb').textContent = step === 'detail'
+        ? `${activeCat.name} › ${activeComp.name}`
+        : activeCat.name;
+    }
+
+    function toggleProblemChecklist(compId, probIdx) {
+      playTactileClick(680);
+      const key = `${compId}-${probIdx}`;
+      if (state.checkedSteps[key]) {
+        delete state.checkedSteps[key];
+      } else {
+        state.checkedSteps[key] = true;
+      }
+      saveProgress();
+      updateSidebarProgress();
+      renderHardwareView();
+    }
+
+    function logComponentInspection(compName) {
+      playTactileClick(740);
+      const newEntry = {
+        id: Date.now(),
+        name: 'Student Bench',
+        section: 'CSS Workbench',
+        note: `Completed diagnostic checklist for ${compName}.`,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      state.publicLogs.unshift(newEntry);
+      saveProgress();
+      updateSidebarProgress();
+      showToast(`Logged "${compName}" check to Activity Log!`);
+    }
+
+    function renderDiagnosticDetailPanel(cat, comp) {
+      const panel = document.getElementById('diagnosticDetailPanel');
+      panel.innerHTML = `
+        <div class="bg-cobalt text-white px-6 py-4 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-wider text-blue-200 block">${cat.name}</span>
+            <h3 class="text-lg font-extrabold leading-tight">${comp.name}</h3>
+          </div>
+          <span class="text-xs font-mono bg-white/15 px-2.5 py-1 rounded-xl border border-white/20">DIAGNOSTIC</span>
+        </div>
+
+        <div class="p-5 sm:p-6 space-y-5 bg-white">
+          <!-- Function Summary -->
+          <div>
+            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">${comp.summary}</p>
+          </div>
+
+          <!-- Common Warning Symptoms -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+            <span class="block text-[11px] font-mono uppercase tracking-wider text-obsidian font-bold mb-2">Common Failure Symptoms</span>
+            <ul class="space-y-1.5">
+              ${comp.symptoms.map(sym => `
+                <li class="flex items-start gap-2 text-xs text-slate-700">
+                  <span class="text-cobalt font-bold mt-0.5">•</span>
+                  <span>${sym}</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+
+          <!-- Sketch #2 Core Feature: Breakdown of list of all possible problems that can still be troubleshooted -->
+          <div>
+            <div class="flex items-center justify-between mb-2.5">
+              <span class="text-xs font-bold text-obsidian">Breakdown of Possible Problems & Checks</span>
+              <span class="text-[11px] font-mono text-cobalt">Tap to verify</span>
+            </div>
+            <div class="space-y-2">
+              ${comp.problems.map((prob, idx) => {
+                const checked = !!state.checkedSteps[`${comp.id}-${idx}`];
+                return `
+                  <button type="button" onclick="toggleProblemChecklist('${comp.id}', ${idx})" aria-pressed="${checked}" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl border cursor-pointer transition ${
+                    checked ? 'bg-blue-50/80 border-cobalt/40 text-obsidian' : 'bg-white border-slate-200/90 hover:border-cobalt/35 text-slate-700'
+                  }">
+                    <span class="w-5 h-5 rounded-lg shrink-0 mt-0.5 flex items-center justify-center border text-xs font-bold transition ${
+                      checked ? 'bg-cobalt border-cobalt text-white' : 'bg-slate-50 border-slate-300 text-transparent'
+                    }">✓</span>
+                    <span class="text-xs leading-relaxed ${checked ? 'line-through text-slate-500' : 'font-medium'}">${prob}</span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- Recommended CSS Tools for this Component -->
+          <div>
+            <span class="block text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold mb-2">Recommended CSS Servicing Tools</span>
+            <div class="flex flex-wrap gap-1.5">
+              ${comp.tools.map(tName => `
+                <button onclick="jumpToToolByName('${tName.replace(/'/g, "\\'")}')" class="tactile-btn text-[11px] font-semibold px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-cobalt hover:text-white text-obsidian border border-slate-200/80">
+                  <svg class="w-3 h-3 inline-block mr-1 -mt-px" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>${tName}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Quick Log Action -->
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+            <span class="text-[11px] text-slate-400">Finished inspecting this part?</span>
+            <button onclick="logComponentInspection('${comp.name.replace(/'/g, "\\'")}')" class="tactile-btn px-3.5 py-2 rounded-xl bg-obsidian hover:bg-cobalt text-white text-xs font-bold">
+              + Log Check
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // 6. TOOLS VIEW RENDERING (All 5 Categories from User Screenshots)
+    const TOOL_CATEGORIES = [
+      'All Tools',
+      'ESD (Electrostatic Discharge) Tools',
+      'Hand Tools',
+      'Cleaning & Organization Tools',
+      'Cable & Networking Tools',
+      'Diagnostic & Testing Tools'
+    ];
+
+    function selectToolCategory(cat) {
+      playTactileClick(510);
+      state.selectedToolCategory = cat;
+      renderToolsView();
+    }
+
+    function jumpToToolByName(toolName) {
+      switchMainTab('tools');
+      state.selectedToolCategory = 'All Tools';
+      renderToolsView(toolName);
+    }
+
+    function renderToolsView(highlightToolName = '') {
+      const filterBar = document.getElementById('toolCategoryFilterBar');
+      filterBar.innerHTML = TOOL_CATEGORIES.map(cat => {
+        const active = state.selectedToolCategory === cat;
+        const count = cat === 'All Tools' ? TOOLS_DATA.length : TOOLS_DATA.filter(t => t.category === cat).length;
+        return `
+          <button onclick="selectToolCategory('${cat}')" class="tactile-btn px-3.5 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 ${
+            active ? 'bg-cobalt text-white' : 'bg-white text-obsidian border border-slate-200 hover:border-cobalt/40'
+          }">
+            <span>${cat}</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-full ${active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}">${count}</span>
+          </button>
+        `;
+      }).join('');
+
+      const filtered = state.selectedToolCategory === 'All Tools'
+        ? TOOLS_DATA
+        : TOOLS_DATA.filter(t => t.category === state.selectedToolCategory);
+
+      const grid = document.getElementById('toolsGrid');
+      grid.innerHTML = filtered.map(tool => {
+        const isHighlighted = highlightToolName && tool.name.toLowerCase() === highlightToolName.toLowerCase();
+        return `
+          <div class="tactile-card ${isHighlighted ? 'tactile-card-active' : ''} rounded-3xl p-5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-50 text-cobalt font-semibold">
+                  ${tool.category}
+                </span>
+                <div class="w-9 h-9 rounded-xl bg-obsidian text-white flex items-center justify-center shrink-0">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-${tool.icon || 'screwdriver'}"/></svg>
+                </div>
+              </div>
+              <h3 class="text-base font-extrabold text-obsidian mb-1.5">${tool.name}</h3>
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">${tool.description}</p>
+            </div>
+
+            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
+              <span class="block text-[10px] font-mono uppercase tracking-wider text-cobalt font-bold mb-1">Usage Tip</span>
+              <p class="text-[11px] text-slate-600 leading-relaxed">${tool.usageTip}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 7. GLOBAL REAL-TIME SEARCH (Components + Faults + Tools)
+    function handleGlobalSearch(query) {
+      const q = query.trim().toLowerCase();
+      const clearBtn = document.getElementById('clearSearchBtn');
+      const resultsSec = document.getElementById('searchResultsSection');
+      const resultsGrid = document.getElementById('searchResultsGrid');
+      const resultsTitle = document.getElementById('searchResultsTitle');
+
+      if (!q) {
+        clearBtn.classList.add('hidden');
+        resultsSec.classList.add('hidden');
+        return;
+      }
+
+      clearBtn.classList.remove('hidden');
+      resultsSec.classList.remove('hidden');
+
+      const matches = [];
+
+      // Search Hardware
+      HARDWARE_DATA.forEach(cat => {
+        cat.items.forEach(item => {
+          const inName = item.name.toLowerCase().includes(q);
+          const inSummary = item.summary.toLowerCase().includes(q);
+          const inProblems = item.problems.some(p => p.toLowerCase().includes(q));
+          const inSymptoms = item.symptoms.some(s => s.toLowerCase().includes(q));
+          if (inName || inSummary || inProblems || inSymptoms) {
+            matches.push({
+              type: 'Hardware',
+              badge: cat.name,
+              title: item.name,
+              sub: item.summary,
+              action: () => {
+                clearGlobalSearch();
+                state.selectedCategoryId = cat.id;
+                state.selectedComponentId = item.id;
+                switchMainTab('hardware');
+              }
+            });
+          }
+        });
+      });
+
+      // Search Tools
+      TOOLS_DATA.forEach(tool => {
+        if (
+          tool.name.toLowerCase().includes(q) ||
+          tool.description.toLowerCase().includes(q) ||
+          tool.category.toLowerCase().includes(q)
+        ) {
+          matches.push({
+            type: 'Tool',
+            badge: tool.category,
+            title: tool.name,
+            sub: tool.description,
+            action: () => {
+              clearGlobalSearch();
+              jumpToToolByName(tool.name);
+            }
+          });
+        }
+      });
+
+      resultsTitle.textContent = `Found ${matches.length} result${matches.length === 1 ? '' : 's'} for "${query}"`;
+
+      if (matches.length === 0) {
+        resultsGrid.innerHTML = `<p class="text-xs text-slate-500 col-span-full py-2">No matching hardware parts, fault symptoms, or tools found. Try searching "CPU", "multimeter", "POST", "RJ45", or "SSD".</p>`;
+        return;
+      }
+
+      window._searchActions = matches.map(m => m.action);
+      resultsGrid.innerHTML = matches.slice(0, 12).map((m, idx) => `
+        <button onclick="window._searchActions[${idx}]()" class="tactile-card rounded-2xl p-3.5 text-left flex flex-col justify-between hover:border-cobalt">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full ${m.type === 'Hardware' ? 'bg-blue-50 text-cobalt' : 'bg-obsidian text-white'} font-semibold">
+                ${m.type} · ${m.badge}
+              </span>
+            </div>
+            <p class="font-bold text-sm text-obsidian">${m.title}</p>
+            <p class="text-[11px] text-slate-500 line-clamp-2 mt-1">${m.sub}</p>
+          </div>
+          <span class="text-[11px] font-bold text-cobalt mt-2">Inspect →</span>
+        </button>
+      `).join('');
+    }
+
+    function clearGlobalSearch() {
+      document.getElementById('globalSearchInput').value = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      document.getElementById('searchResultsSection').classList.add('hidden');
+    }
+
+    // 8. FLASHCARDS DECK ENGINE
+    function buildFlashcardDeck() {
+      const mode = document.getElementById('flashcardDeckSelect')?.value || 'all';
+      let cards = [];
+
+      if (mode === 'all' || mode === 'hardware') {
+        HARDWARE_DATA.forEach(cat => {
+          cat.items.forEach(item => {
+            cards.push({
+              id: `hw-${item.id}`,
+              badge: `Hardware · ${cat.name}`,
+              title: item.name,
+              desc: item.summary,
+              note: `Top Fault: ${item.problems[0]}`
+            });
+          });
+        });
+      }
+
+      if (mode === 'all' || mode === 'tools') {
+        TOOLS_DATA.forEach(tool => {
+          cards.push({
+            id: `tool-${tool.id}`,
+            badge: `Tool · ${tool.category}`,
+            title: tool.name,
+            desc: tool.description,
+            note: `Bench Usage: ${tool.usageTip}`
+          });
+        });
+      }
+
+      state.flashcards = cards;
+      state.fcIndex = 0;
+    }
+
+    function resetFlashcards() {
+      buildFlashcardDeck();
+      renderFlashcard();
+    }
+
+    function shuffleFlashcards() {
+      playTactileClick(580);
+      for (let i = state.flashcards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [state.flashcards[i], state.flashcards[j]] = [state.flashcards[j], state.flashcards[i]];
+      }
+      state.fcIndex = 0;
+      renderFlashcard();
+      showToast('Flashcard deck shuffled');
+    }
+
+    function flipFlashcard() {
+      playTactileClick(640);
+      document.getElementById('flashcardBox').classList.toggle('flipped');
+    }
+
+    function nextFlashcard() {
+      playTactileClick(520);
+      document.getElementById('flashcardBox').classList.remove('flipped');
+      state.fcIndex = (state.fcIndex + 1) % state.flashcards.length;
+      renderFlashcard();
+    }
+
+    function prevFlashcard() {
+      playTactileClick(480);
+      document.getElementById('flashcardBox').classList.remove('flipped');
+      state.fcIndex = (state.fcIndex - 1 + state.flashcards.length) % state.flashcards.length;
+      renderFlashcard();
+    }
+
+    function markFlashcardMastered() {
+      playTactileClick(760);
+      const card = state.flashcards[state.fcIndex];
+      if (!card) return;
+      state.fcMastered[card.id] = !state.fcMastered[card.id];
+      saveProgress();
+      renderFlashcard();
+    }
+
+    function renderFlashcard() {
+      if (state.flashcards.length === 0) buildFlashcardDeck();
+      const card = state.flashcards[state.fcIndex];
+      const masteredCount = Object.values(state.fcMastered).filter(Boolean).length;
+
+      document.getElementById('flashcardCounter').textContent = `Card ${state.fcIndex + 1} of ${state.flashcards.length}`;
+      document.getElementById('flashcardMasteredCount').textContent = `Mastered: ${masteredCount}`;
+      document.getElementById('fcFrontBadge').textContent = card.badge;
+      document.getElementById('fcFrontTitle').textContent = card.title;
+      document.getElementById('fcBackDesc').textContent = card.desc;
+      document.getElementById('fcBackNote').textContent = card.note;
+
+      const isMastered = !!state.fcMastered[card.id];
+      const btn = document.getElementById('masterCardBtn');
+      btn.textContent = isMastered ? '★ Mastered (Click to Unmark)' : '✓ Mark Mastered';
+      btn.className = isMastered
+        ? 'tactile-btn px-2 sm:px-5 py-2.5 rounded-2xl bg-obsidian text-white text-xs sm:text-sm font-bold'
+        : 'tactile-btn px-2 sm:px-5 py-2.5 rounded-2xl bg-cobalt text-white text-xs sm:text-sm font-bold hover:bg-cobaltDark';
+    }
+
+    // 9. LAB SCENARIOS ENGINE
+    function selectScenario(scenId) {
+      playTactileClick(530);
+      state.activeScenarioId = scenId;
+      renderScenariosView();
+    }
+
+    function answerScenarioStep(scenId, stepType, optionIdx) {
+      playTactileClick(650);
+      if (!state.scenarioAnswers[scenId]) state.scenarioAnswers[scenId] = {};
+      state.scenarioAnswers[scenId][stepType] = optionIdx;
+      saveProgress();
+      renderScenariosView();
+    }
+
+    function renderScenariosView() {
+      const solvedCount = LAB_SCENARIOS.filter(s => {
+        const ans = state.scenarioAnswers[s.id];
+        return ans && ans.tool === s.correctTool && ans.fix === s.correctFix;
+      }).length;
+      document.getElementById('scenarioScorePill').textContent = `Solved: ${solvedCount} / ${LAB_SCENARIOS.length} Cases`;
+
+      const listEl = document.getElementById('scenarioList');
+      listEl.innerHTML = LAB_SCENARIOS.map(s => {
+        const active = s.id === state.activeScenarioId;
+        const ans = state.scenarioAnswers[s.id];
+        const solved = ans && ans.tool === s.correctTool && ans.fix === s.correctFix;
+        return `
+          <button onclick="selectScenario('${s.id}')" class="tactile-card ${active ? 'tactile-card-active' : ''} w-full rounded-2xl p-4 text-left">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold">${s.difficulty}</span>
+              ${solved ? '<span class="text-[11px] font-mono font-bold text-cobalt">PASSED ✓</span>' : '<span class="text-[11px] font-mono text-slate-400">OPEN</span>'}
+            </div>
+            <p class="font-bold text-sm text-obsidian">${s.title}</p>
+          </button>
+        `;
+      }).join('');
+
+      const scen = LAB_SCENARIOS.find(s => s.id === state.activeScenarioId) || LAB_SCENARIOS[0];
+      const ans = state.scenarioAnswers[scen.id] || {};
+      const bothCorrect = ans.tool === scen.correctTool && ans.fix === scen.correctFix;
+
+      const benchEl = document.getElementById('activeScenarioBench');
+      benchEl.innerHTML = `
+        <div class="space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-100">
+            <div>
+              <span class="text-xs font-mono uppercase tracking-wider text-cobalt font-bold">Diagnostic Case File</span>
+              <h2 class="text-xl font-extrabold text-obsidian">${scen.title}</h2>
+            </div>
+            <span class="text-xs font-mono px-3 py-1 rounded-full ${bothCorrect ? 'bg-cobalt text-white font-bold' : 'bg-slate-100 text-slate-600'}">
+              ${bothCorrect ? 'DIAGNOSTIC PASSED // 100%' : 'AWAITING BENCH ACTION'}
+            </span>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+            <span class="block text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold mb-1">Reported Symptom</span>
+            <p class="text-xs sm:text-sm text-obsidian leading-relaxed font-medium">${scen.symptom}</p>
+          </div>
+
+          <!-- Step 1: Pick Tool -->
+          <div>
+            <p class="text-xs sm:text-sm font-bold text-obsidian mb-2.5">1. ${scen.questionTool}</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              ${scen.toolOptions.map((opt, idx) => {
+                const chosen = ans.tool === idx;
+                const isRight = idx === scen.correctTool;
+                let style = 'bg-white border-slate-200 text-obsidian hover:border-cobalt';
+                if (chosen && isRight) style = 'bg-cobalt border-cobalt text-white font-bold';
+                else if (chosen && !isRight) style = 'bg-red-50 border-red-300 text-red-700 font-semibold';
+                return `
+                  <button onclick="answerScenarioStep('${scen.id}', 'tool', ${idx})" class="tactile-btn p-3 rounded-2xl border text-xs text-left ${style}">
+                    ${opt}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- Step 2: Pick Repair Action -->
+          <div>
+            <p class="text-xs sm:text-sm font-bold text-obsidian mb-2.5">2. ${scen.questionFix}</p>
+            <div class="space-y-2">
+              ${scen.fixOptions.map((opt, idx) => {
+                const chosen = ans.fix === idx;
+                const isRight = idx === scen.correctFix;
+                let style = 'bg-white border-slate-200 text-obsidian hover:border-cobalt';
+                if (chosen && isRight) style = 'bg-cobalt border-cobalt text-white font-bold';
+                else if (chosen && !isRight) style = 'bg-red-50 border-red-300 text-red-700 font-semibold';
+                return `
+                  <button onclick="answerScenarioStep('${scen.id}', 'fix', ${idx})" class="tactile-btn w-full p-3.5 rounded-2xl border text-xs text-left ${style}">
+                    ${opt}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- Resolution Explanation -->
+          ${bothCorrect ? `
+            <div class="p-4 rounded-2xl bg-blue-50 border border-cobalt/30 text-obsidian">
+              <span class="block text-xs font-mono uppercase tracking-wider text-cobalt font-bold mb-1">✓ Correct Troubleshooting Procedure</span>
+              <p class="text-xs sm:text-sm leading-relaxed">${scen.explanation}</p>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    // 10. PAGES DIRECTORY & OPTIONAL PUBLIC ACTIVITY LOG
+    function renderPagesDirectory() {
+      const dir = document.getElementById('pagesDirectoryList');
+      dir.innerHTML = HARDWARE_DATA.map(cat => `
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
+          <div>
+            <p class="font-bold text-sm text-obsidian">${cat.name}</p>
+            <p class="text-[11px] text-slate-500">${cat.items.map(i => i.name).slice(0, 4).join(', ')}...</p>
+          </div>
+          <button onclick="selectHardwareCategory('${cat.id}')" class="tactile-btn px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-cobalt shrink-0">
+            Open (${cat.items.length})
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function submitPublicLog(e) {
+      e.preventDefault();
+      playTactileClick(700);
+      const name = document.getElementById('logStudentName').value.trim() || 'Anonymous Student';
+      const section = document.getElementById('logSectionInput').value.trim() || 'CSS Lab';
+      const note = document.getElementById('logNoteInput').value.trim();
+      if (!note) return;
+
+      state.publicLogs.unshift({
+        id: Date.now(),
+        name,
+        section,
+        note,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+      saveProgress();
+      document.getElementById('logNoteInput').value = '';
+      renderPublicLogs();
+      updateSidebarProgress();
+      showToast('Posted to optional public activity log');
+    }
+
+    function clearPublicLogs() {
+      playTactileClick(450);
+      state.publicLogs = [];
+      saveProgress();
+      renderPublicLogs();
+      updateSidebarProgress();
+      showToast('Local session log cleared');
+    }
+
+    function renderPublicLogs() {
+      const feed = document.getElementById('publicActivityFeed');
+      if (state.publicLogs.length === 0) {
+        feed.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No entries yet. Post your completed hardware or tool check above!</p>`;
+        return;
+      }
+      feed.innerHTML = state.publicLogs.map(entry => `
+        <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-cobalt"></span>
+              <span class="text-xs font-bold text-obsidian">${entry.name}</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">${entry.section}</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400">${entry.time}</span>
+          </div>
+          <p class="text-xs text-slate-600 pl-4">${entry.note}</p>
+        </div>
+      `).join('');
+    }
+
+    // 11. MODAL & PROGRESS HELPERS
+    function openLabUtilityModal() {
+      playTactileClick(580);
+      const modal = document.getElementById('labUtilityModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeLabUtilityModal() {
+      const modal = document.getElementById('labUtilityModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // Progress is kept in this browser, and also in the artifact's database
+    // under the viewer's own private area when they are signed in with Claude.
+    const PROGRESS_KEYS = {
+      checkedSteps: 'selffix_checked_steps',
+      publicLogs: 'selffix_public_logs',
+      fcMastered: 'selffix_fc_mastered',
+      scenarioAnswers: 'selffix_scenario_answers'
+    };
+    const cloud = { doc: null, timer: null };
+
+    function writeLocalProgress() {
+      try {
+        for (const [field, key] of Object.entries(PROGRESS_KEYS)) {
+          localStorage.setItem(key, JSON.stringify(state[field]));
+        }
+      } catch (e) {
+        // storage can be blocked, the cloud copy still works
+      }
+    }
+
+    function saveProgress() {
+      writeLocalProgress();
+      clearTimeout(cloud.timer);
+      cloud.timer = setTimeout(pushProgress, 800);
+    }
+
+    function pushProgress() {
+      if (!cloud.doc) return;
+      const body = {};
+      for (const field of Object.keys(PROGRESS_KEYS)) body[field] = state[field];
+      cloud.doc.set(body).catch(() => {});
+    }
+
+    async function connectCloud() {
+      try {
+        if (!window.claude || !window.claude.use) return;
+        const db = await window.claude.use('db');
+        const user = await window.claude.use('user');
+        const uid = db && user ? await user.id() : null;
+        if (!uid) return; // signed out: browser storage only
+        cloud.doc = db.doc('data/users/' + uid + '/progress');
+        const snap = await cloud.doc.get();
+        if (!snap.exists) {
+          pushProgress(); // first time here: copy what this browser has
+          return;
+        }
+        const saved = snap.data() || {};
+        for (const field of Object.keys(PROGRESS_KEYS)) {
+          if (saved[field] !== undefined) state[field] = saved[field];
+        }
+        writeLocalProgress();
+        updateSidebarProgress();
+        renderHardwareView();
+        renderPublicLogs();
+        renderScenariosView();
+        renderFlashcard();
+      } catch (e) {
+        cloud.doc = null; // the browser copy keeps working
+      }
+    }
+
+    function resetAllChecklists() {
+      state.checkedSteps = {};
+      saveProgress();
+      updateSidebarProgress();
+      renderHardwareView();
+      closeLabUtilityModal();
+      showToast('All diagnostic checklists reset');
+    }
+
+    function updateSidebarProgress() {
+      const totalChecked = Object.keys(state.checkedSteps).length;
+      const totalProblems = HARDWARE_DATA.reduce((sum, c) => sum + c.items.reduce((s, i) => s + i.problems.length, 0), 0);
+      const pct = Math.min(100, Math.max(8, Math.round((totalChecked / totalProblems) * 100)));
+
+      document.getElementById('sidebarMasteredText').textContent = `${totalChecked} Checked`;
+      document.getElementById('sidebarProgressBar').style.width = `${pct}%`;
+      document.getElementById('logCountBadge').textContent = state.publicLogs.length;
+    }
+
+    // 12. INITIALIZE APP ON LOAD
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (localStorage.getItem('selffix-sidebar') === 'hidden') {
+          document.body.classList.add('sidebar-hidden');
+        }
+      } catch (e) {
+        // ignore, the sidebar just shows
+      }
+      updateSidebarProgress();
+      renderHardwareView();
+      buildFlashcardDeck();
+      connectCloud();
+    });
+    // Esc closes the sidebar and the preferences popup
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      closeLabUtilityModal();
+      toggleSlidebar(false);
+    });
+  </script>
+</body>
+</html>
